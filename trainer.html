@@ -159,6 +159,23 @@
             color: #a00; font-size: 20px; cursor: pointer; opacity: 0.6; z-index: 5;
         }
         .delete-btn:active { opacity: 1; }
+        .backup-panel {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        .backup-btn {
+            background: transparent;
+            border: 1px solid #b59a6b;
+            color: #b59a6b;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .backup-btn:active { background: #b59a6b20; }
+        #import-file-input { display: none; }
     </style>
 </head>
 <body>
@@ -181,9 +198,56 @@
         <div id="recognition-result"></div>
     </div>
     
-    <div class="footer">🇹🇿 русский → суахили · 🔊 слушай · 🔄 проверь · 🎤 запиши себя</div>
+    <div class="footer">
+        🇹🇿 русский → суахили · 🔊 слушай · 🔄 проверь · 🎤 запиши себя
+        <div class="backup-panel">
+            <button class="backup-btn" id="export-btn">📤 Экспорт слов</button>
+            <button class="backup-btn" id="import-btn">📥 Импорт слов</button>
+        </div>
+        <input type="file" id="import-file-input" accept=".json,application/json">
+    </div>
 
     <script>
+        // ================== ХРАНЕНИЕ В LOCALSTORAGE ==================
+        const STORAGE_KEY = 'swahili_words';
+        
+        // Стартовый набор слов
+        const DEFAULT_WORDS = [
+            { sw: 'Jina', ru: 'Имя' },
+            { sw: 'Nani', ru: 'Кто' },
+            { sw: 'Wapi', ru: 'Где/Куда' },
+            { sw: 'Mimi', ru: 'Я' },
+            { sw: 'Wewe', ru: 'Ты' },
+            { sw: 'Yeye', ru: 'Он/Она' },
+            { sw: 'Ninatoka', ru: 'Я из ...' },
+            { sw: 'Unasoma', ru: 'Ты учишься' },
+            { sw: 'Anafanya kazi', ru: 'Он/Она работает' },
+            { sw: 'Asante', ru: 'Спасибо' },
+            { sw: 'Karibu', ru: 'Добро пожаловать' },
+            { sw: 'Kwa heri', ru: 'До свидания' },
+            { sw: 'Twende', ru: 'Поехали!' }
+        ];
+
+        // Загружаем слова из localStorage или используем стартовые
+        function loadWords() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                try {
+                    return JSON.parse(stored);
+                } catch (e) {
+                    console.error('Ошибка загрузки слов:', e);
+                }
+            }
+            return [...DEFAULT_WORDS]; // копия массива
+        }
+
+        // Сохраняем слова в localStorage
+        function saveWords(wordsArray) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(wordsArray));
+        }
+
+        let words = loadWords();
+
         // ================== АУДИО РЕКОРДЕР ==================
         let mediaRecorder;
         let audioChunks = [];
@@ -223,23 +287,6 @@
         }
         let currentChallengeWord = null;
 
-        // ================== ДАННЫЕ ==================
-        let words = [
-            { sw: 'Jina', ru: 'Имя' },
-            { sw: 'Nani', ru: 'Кто' },
-            { sw: 'Wapi', ru: 'Где/Куда' },
-            { sw: 'Mimi', ru: 'Я' },
-            { sw: 'Wewe', ru: 'Ты' },
-            { sw: 'Yeye', ru: 'Он/Она' },
-            { sw: 'Ninatoka', ru: 'Я из ...' },
-            { sw: 'Unasoma', ru: 'Ты учишься' },
-            { sw: 'Anafanya kazi', ru: 'Он/Она работает' },
-            { sw: 'Asante', ru: 'Спасибо' },
-            { sw: 'Karibu', ru: 'Добро пожаловать' },
-            { sw: 'Kwa heri', ru: 'До свидания' },
-            { sw: 'Twende', ru: 'Поехали!' }
-        ];
-
         const app = document.getElementById('app');
 
         function renderCards() {
@@ -253,12 +300,14 @@
                 
                 const controls = document.createElement('div'); controls.className = 'controls';
                 
-                if (index >= 13) {
+                // Кнопка удаления (только для слов, добавленных пользователем)
+                if (index >= DEFAULT_WORDS.length) {
                     const delBtn = document.createElement('button');
                     delBtn.textContent = '✖'; delBtn.className = 'delete-btn';
                     delBtn.onclick = (e) => {
                         e.stopPropagation();
                         words.splice(index, 1);
+                        saveWords(words);
                         renderCards();
                     };
                     card.appendChild(delBtn);
@@ -310,6 +359,7 @@
                 
                 if (swText) {
                     words.push({ sw: swText, ru: ruText });
+                    saveWords(words);
                     renderCards();
                     inputField.value = '';
                 } else {
@@ -325,6 +375,46 @@
         
         addBtn.addEventListener('click', translateAndAdd);
         inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') translateAndAdd(); });
+
+        // ================== ЭКСПОРТ / ИМПОРТ ==================
+        document.getElementById('export-btn').addEventListener('click', () => {
+            const dataStr = JSON.stringify(words, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `swahili_words_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('import-btn').addEventListener('click', () => {
+            document.getElementById('import-file-input').click();
+        });
+
+        document.getElementById('import-file-input').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported) && imported.every(w => w.sw && w.ru)) {
+                        words = imported;
+                        saveWords(words);
+                        renderCards();
+                        alert(`✅ Импортировано ${imported.length} слов.`);
+                    } else {
+                        alert('❌ Неверный формат файла. Ожидается массив объектов {sw, ru}.');
+                    }
+                } catch (err) {
+                    alert('❌ Ошибка чтения JSON-файла.');
+                }
+                event.target.value = '';
+            };
+            reader.readAsText(file);
+        });
 
         // ================== ТРЕНИРОВКА ==================
         const startBtn = document.getElementById('start-challenge-btn');
