@@ -305,20 +305,38 @@
                     card.appendChild(delBtn);
                 }
                 
-                const playBtn = document.createElement('button'); playBtn.textContent = '🔊';
-                playBtn.onclick = async (e) => { 
-                    e.stopPropagation();
-                    try {
-                        const blob = await getAudioFromDB(w.sw);
-                        if (blob) {
-                            new Audio(URL.createObjectURL(blob)).play();
-                        } else {
-                            alert(`⚠️ Нет аудио для "${w.sw}"`);
-                        }
-                    } catch (err) {
-                        alert(`⚠️ Ошибка загрузки аудио`);
-                    }
-                };
+const playBtn = document.createElement('button'); playBtn.textContent = '🔊';
+playBtn.onclick = async (e) => { 
+    e.stopPropagation();
+    try {
+        // Пытаемся достать из базы
+        let blob = await getAudioFromDB(w.sw);
+        
+        // Если нет в базе — скачиваем
+        if (!blob) {
+            playBtn.textContent = '⏳';
+            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=sw&q=${encodeURIComponent(w.sw)}`;
+            const audioRes = await fetch(ttsUrl);
+            if (audioRes.ok) {
+                blob = await audioRes.blob();
+                await saveAudioToDB(w.sw, blob);
+            } else {
+                throw new Error('Не удалось скачать аудио');
+            }
+            playBtn.textContent = '🔊';
+        }
+        
+        // Воспроизводим
+        if (blob) {
+            new Audio(URL.createObjectURL(blob)).play();
+        } else {
+            alert(`⚠️ Не удалось загрузить аудио для "${w.sw}"`);
+        }
+    } catch (err) {
+        playBtn.textContent = '🔊';
+        alert(`⚠️ Ошибка загрузки аудио`);
+    }
+};
                 
                 const recBtn = document.createElement('button'); recBtn.textContent = '🎤';
                 recBtn.onclick = (e) => {
@@ -339,7 +357,7 @@
         const inputField = document.getElementById('new-word-input');
         const addBtn = document.getElementById('add-word-btn');
         
-       async function translateAndAdd() {
+  async function translateAndAdd() {
     const ruText = inputField.value.trim();
     if (!ruText) return;
     
@@ -347,13 +365,8 @@
     addBtn.textContent = '⏳ Перевожу...';
     
     try {
-        // Прямой запрос к Google Translate с "человеческими" заголовками
         const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=sw&dt=t&q=${encodeURIComponent(ruText)}`;
-        const response = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
-            }
-        });
+        const response = await fetch(url);
         const data = await response.json();
         const swText = data[0][0][0];
         
@@ -361,18 +374,7 @@
             words.push({ sw: swText, ru: ruText });
             renderCards();
             inputField.value = '';
-            
-            // Скачиваем аудио
-            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=sw&q=${encodeURIComponent(swText)}`;
-            const audioRes = await fetch(ttsUrl, {
-                headers: {
-                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
-                }
-            });
-            if (audioRes.ok) {
-                const audioBlob = await audioRes.blob();
-                await saveAudioToDB(swText, audioBlob);
-            }
+            // Аудио НЕ скачиваем сразу — только при нажатии на 🔊
         } else {
             alert('❌ Не удалось перевести.');
         }
