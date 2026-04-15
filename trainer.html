@@ -184,47 +184,6 @@
     <div class="footer">🇹🇿 русский → суахили · 🔊 слушай · 🔄 проверь · 🎤 запиши себя</div>
 
     <script>
-        // ================== INDEXEDDB (ХРАНЕНИЕ АУДИО) ==================
-        const DB_NAME = 'SwahiliAudioDB';
-        const STORE_NAME = 'audio';
-        let db = null;
-
-        async function openDB() {
-            return new Promise((resolve, reject) => {
-                const request = indexedDB.open(DB_NAME, 1);
-                request.onerror = () => reject(request.error);
-                request.onsuccess = () => { db = request.result; resolve(db); };
-                request.onupgradeneeded = (evt) => {
-                    const db = evt.target.result;
-                    if (!db.objectStoreNames.contains(STORE_NAME)) {
-                        db.createObjectStore(STORE_NAME);
-                    }
-                };
-            });
-        }
-
-        async function saveAudioToDB(word, blob) {
-            if (!db) await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readwrite');
-                const store = tx.objectStore(STORE_NAME);
-                const request = store.put(blob, word);
-                request.onsuccess = () => resolve();
-                request.onerror = () => reject(request.error);
-            });
-        }
-
-        async function getAudioFromDB(word) {
-            if (!db) await openDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_NAME, 'readonly');
-                const store = tx.objectStore(STORE_NAME);
-                const request = store.get(word);
-                request.onsuccess = () => resolve(request.result);
-                request.onerror = () => reject(request.error);
-            });
-        }
-
         // ================== АУДИО РЕКОРДЕР ==================
         let mediaRecorder;
         let audioChunks = [];
@@ -289,7 +248,7 @@
             words.forEach((w, index) => {
                 const card = document.createElement('div'); card.className = 'card';
                 const textDiv = document.createElement('div'); textDiv.className = 'card-text';
-                textDiv.textContent = w.ru;   // ПО УМОЛЧАНИЮ РУССКИЙ (АКТИВНЫЙ RECALL)
+                textDiv.textContent = w.ru;
                 let flipped = true;
                 
                 const controls = document.createElement('div'); controls.className = 'controls';
@@ -305,38 +264,17 @@
                     card.appendChild(delBtn);
                 }
                 
-const playBtn = document.createElement('button'); playBtn.textContent = '🔊';
-playBtn.onclick = async (e) => { 
-    e.stopPropagation();
-    try {
-        // Пытаемся достать из базы
-        let blob = await getAudioFromDB(w.sw);
-        
-        // Если нет в базе — скачиваем
-        if (!blob) {
-            playBtn.textContent = '⏳';
-            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=sw&q=${encodeURIComponent(w.sw)}`;
-            const audioRes = await fetch(ttsUrl);
-            if (audioRes.ok) {
-                blob = await audioRes.blob();
-                await saveAudioToDB(w.sw, blob);
-            } else {
-                throw new Error('Не удалось скачать аудио');
-            }
-            playBtn.textContent = '🔊';
-        }
-        
-        // Воспроизводим
-        if (blob) {
-            new Audio(URL.createObjectURL(blob)).play();
-        } else {
-            alert(`⚠️ Не удалось загрузить аудио для "${w.sw}"`);
-        }
-    } catch (err) {
-        playBtn.textContent = '🔊';
-        alert(`⚠️ Ошибка загрузки аудио`);
-    }
-};
+                const playBtn = document.createElement('button'); playBtn.textContent = '🔊';
+                playBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const utterance = new SpeechSynthesisUtterance(w.sw);
+                    utterance.lang = 'sw-KE';
+                    utterance.rate = 0.9;
+                    const voices = speechSynthesis.getVoices();
+                    const swahiliVoice = voices.find(v => v.lang.includes('sw') || v.lang.includes('ke'));
+                    if (swahiliVoice) utterance.voice = swahiliVoice;
+                    speechSynthesis.speak(utterance);
+                };
                 
                 const recBtn = document.createElement('button'); recBtn.textContent = '🎤';
                 recBtn.onclick = (e) => {
@@ -357,34 +295,33 @@ playBtn.onclick = async (e) => {
         const inputField = document.getElementById('new-word-input');
         const addBtn = document.getElementById('add-word-btn');
         
-  async function translateAndAdd() {
-    const ruText = inputField.value.trim();
-    if (!ruText) return;
-    
-    addBtn.disabled = true;
-    addBtn.textContent = '⏳ Перевожу...';
-    
-    try {
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=sw&dt=t&q=${encodeURIComponent(ruText)}`;
-        const response = await fetch(url);
-        const data = await response.json();
-        const swText = data[0][0][0];
-        
-        if (swText) {
-            words.push({ sw: swText, ru: ruText });
-            renderCards();
-            inputField.value = '';
-            // Аудио НЕ скачиваем сразу — только при нажатии на 🔊
-        } else {
-            alert('❌ Не удалось перевести.');
+        async function translateAndAdd() {
+            const ruText = inputField.value.trim();
+            if (!ruText) return;
+            
+            addBtn.disabled = true;
+            addBtn.textContent = '⏳ Перевожу...';
+            
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=sw&dt=t&q=${encodeURIComponent(ruText)}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                const swText = data[0][0][0];
+                
+                if (swText) {
+                    words.push({ sw: swText, ru: ruText });
+                    renderCards();
+                    inputField.value = '';
+                } else {
+                    alert('❌ Не удалось перевести.');
+                }
+            } catch (e) {
+                alert('❌ Ошибка сети. Попробуйте позже.');
+            } finally {
+                addBtn.disabled = false;
+                addBtn.textContent = '➕ Добавить';
+            }
         }
-    } catch (e) {
-        alert('❌ Ошибка сети. Попробуйте позже.');
-    } finally {
-        addBtn.disabled = false;
-        addBtn.textContent = '➕ Добавить';
-    }
-}
         
         addBtn.addEventListener('click', translateAndAdd);
         inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') translateAndAdd(); });
@@ -440,7 +377,7 @@ playBtn.onclick = async (e) => {
         startBtn.addEventListener('click', pickRandomChallenge);
         speakBtn.addEventListener('click', startListening);
         
-        openDB().then(() => renderCards());
+        renderCards();
     </script>
 </body>
 </html>
