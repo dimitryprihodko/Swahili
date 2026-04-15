@@ -339,40 +339,50 @@
         const inputField = document.getElementById('new-word-input');
         const addBtn = document.getElementById('add-word-btn');
         
-        async function translateAndAdd() {
-            const ruText = inputField.value.trim();
-            if (!ruText) return;
-            
-            addBtn.disabled = true;
-            addBtn.textContent = '⏳ Перевожу...';
-            
-            try {
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=sw&dt=t&q=${encodeURIComponent(ruText)}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                const swText = data[0][0][0];
-                
-                if (swText) {
-                    words.push({ sw: swText, ru: ruText });
-                    renderCards();
-                    inputField.value = '';
-                    
-                    // Скачиваем и сохраняем аудио в IndexedDB
-                    const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=sw&q=${encodeURIComponent(swText)}`;
-                    const audioRes = await fetch(ttsUrl);
-                    const audioBlob = await audioRes.blob();
-                    await saveAudioToDB(swText, audioBlob);
-                    console.log(`✅ Аудио сохранено в базу: ${swText}`);
-                } else {
-                    alert('❌ Не удалось перевести.');
-                }
-            } catch (e) {
-                alert('❌ Ошибка сети.');
-            } finally {
-                addBtn.disabled = false;
-                addBtn.textContent = '➕ Добавить';
+       async function translateAndAdd() {
+    const ruText = inputField.value.trim();
+    if (!ruText) return;
+    
+    addBtn.disabled = true;
+    addBtn.textContent = '⏳ Перевожу...';
+    
+    try {
+        // Прямой запрос к Google Translate с "человеческими" заголовками
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=sw&dt=t&q=${encodeURIComponent(ruText)}`;
+        const response = await fetch(url, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
             }
+        });
+        const data = await response.json();
+        const swText = data[0][0][0];
+        
+        if (swText) {
+            words.push({ sw: swText, ru: ruText });
+            renderCards();
+            inputField.value = '';
+            
+            // Скачиваем аудио
+            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=sw&q=${encodeURIComponent(swText)}`;
+            const audioRes = await fetch(ttsUrl, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+                }
+            });
+            if (audioRes.ok) {
+                const audioBlob = await audioRes.blob();
+                await saveAudioToDB(swText, audioBlob);
+            }
+        } else {
+            alert('❌ Не удалось перевести.');
         }
+    } catch (e) {
+        alert('❌ Ошибка сети. Попробуйте позже.');
+    } finally {
+        addBtn.disabled = false;
+        addBtn.textContent = '➕ Добавить';
+    }
+}
         
         addBtn.addEventListener('click', translateAndAdd);
         inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') translateAndAdd(); });
