@@ -353,6 +353,17 @@
 
     <!-- Карточки -->
     <div id="app" class="cards-container"></div>
+    
+    <!-- ПАНЕЛЬ АКТИВНОЙ ТРЕНИРОВКИ (CHALLENGE) -->
+    <div id="active-challenge" style="margin-top: 30px; background: #1e3b1a80; padding: 20px; border-radius: 40px; backdrop-filter: blur(4px); border: 2px solid #d4af37; text-align: center; width: 100%; max-width: 600px;">
+        <h3 style="margin-top: 0; color: #e0d5c1;">⚡ Активная тренировка</h3>
+        <div id="challenge-prompt" style="font-size: 32px; font-weight: bold; color: #fcf9f0; margin: 15px 0; text-shadow: 3px 3px 0 #0a1a08;">Нажми «Случайный элемент»</div>
+        <div>
+            <button class="challenge-btn" id="start-challenge-btn" style="background: #d4af37; border: none; color: #1e3b1a; font-weight: bold; padding: 14px 24px; font-size: 20px; border-radius: 50px; margin: 6px; cursor: pointer; box-shadow: 0 5px 0 #7a5c1a;">🎲 Случайный</button>
+            <button class="challenge-btn" id="reveal-answer-btn" style="display: none; background: #d4af37; border: none; color: #1e3b1a; font-weight: bold; padding: 14px 24px; font-size: 20px; border-radius: 50px; margin: 6px; cursor: pointer; box-shadow: 0 5px 0 #7a5c1a;">👁 Показать ответ</button>
+        </div>
+        <div id="challenge-answer" style="margin-top: 20px; font-size: 24px; color: #ffe28c; min-height: 40px;"></div>
+    </div>
 
     <!-- Бэкап -->
     <div class="backup-panel">
@@ -921,6 +932,59 @@ function updatePlaceholder() {
         // ================== СТАРТ ==================
         switchLanguage('sw');
         updatePlaceholder();
+
+               // ================== АКТИВНАЯ ТРЕНИРОВКА (CHALLENGE) ==================
+        const challengePrompt = document.getElementById('challenge-prompt');
+        const startChallengeBtn = document.getElementById('start-challenge-btn');
+        const revealAnswerBtn = document.getElementById('reveal-answer-btn');
+        const challengeAnswerDiv = document.getElementById('challenge-answer');
+        
+        let currentChallengeItem = null;
+
+        function pickRandomChallenge() {
+            const items = currentTab === 'words' ? words : phrases;
+            if (items.length === 0) {
+                challengePrompt.textContent = '✨ Добавьте элементы для тренировки';
+                revealAnswerBtn.style.display = 'none';
+                challengeAnswerDiv.textContent = '';
+                return;
+            }
+            
+            const randomIndex = Math.floor(Math.random() * items.length);
+            currentChallengeItem = items[randomIndex];
+            
+            // Показываем ЗАПРОС (на родном языке)
+            challengePrompt.textContent = `👉 ${currentChallengeItem.ru} 👈`;
+            revealAnswerBtn.style.display = 'inline-block';
+            startChallengeBtn.textContent = '🔄 Следующий';
+            challengeAnswerDiv.textContent = '';
+        }
+
+        function revealAnswer() {
+            if (currentChallengeItem) {
+                challengeAnswerDiv.textContent = `✅ ${currentChallengeItem.sw}`;
+                // Озвучиваем ответ для закрепления
+                const utterance = new SpeechSynthesisUtterance(currentChallengeItem.sw);
+                utterance.lang = currentLang;
+                utterance.rate = 0.9;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        startChallengeBtn.addEventListener('click', pickRandomChallenge);
+        revealAnswerBtn.addEventListener('click', revealAnswer);
+        
+        // Обновляем тренировку при переключении вкладок или изменении данных
+        const originalRenderCards = renderCards;
+        renderCards = function() {
+            originalRenderCards();
+            // Сбрасываем тренировку, если данные изменились
+            currentChallengeItem = null;
+            challengePrompt.textContent = 'Нажми «Случайный элемент»';
+            revealAnswerBtn.style.display = 'none';
+            challengeAnswerDiv.textContent = '';
+            startChallengeBtn.textContent = '🎲 Случайный';
+        }; 
     </script>
 </body>
 </html>
