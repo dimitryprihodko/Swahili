@@ -379,6 +379,7 @@
         });
 
         // Рендер карточек с учётом поиска
+        // Рендер карточек с учётом поиска
         function renderCards() {
             const searchTerm = searchInput.value.trim().toLowerCase();
             let items = currentTab === 'words' ? words : phrases;
@@ -410,7 +411,7 @@
                 const controls = document.createElement('div');
                 controls.className = 'controls';
 
-                // 🔊 Озвучка (TTS)
+                // 1️⃣ Кнопка ОЗВУЧКИ (TTS)
                 const playBtn = document.createElement('button');
                 playBtn.textContent = '🔊';
                 playBtn.onclick = (e) => {
@@ -420,27 +421,13 @@
                     utterance.rate = 0.9;
                     speechSynthesis.speak(utterance);
                 };
-const recBtn = document.createElement('button');
-recBtn.textContent = '🎤';
-recBtn.style.background = '#8b4513'; // Коричневый оттенок для разнообразия
-recBtn.onclick = (e) => {
-    e.stopPropagation();
-    if (currentRecBtn) return;
-    currentRecBtn = recBtn;
-    recBtn.textContent = '🔴';
-    recBtn.style.background = '#8b0000';
-    startRecording(item.sw);
-};
-controls.appendChild(playBtn);
-controls.appendChild(tipBtn);
-controls.appendChild(recBtn);
-                // 🧠 X-Ray разбор
+
+                // 2️⃣ Кнопка X-RAY (Мозг)
                 const tipBtn = document.createElement('button');
                 tipBtn.textContent = '🧠';
                 tipBtn.style.background = '#4a6b45';
                 tipBtn.onclick = (e) => {
                     e.stopPropagation();
-                    // Заглушка — здесь будет сложная логика разбора
                     if (currentTab === 'phrases') {
                         xrayText.innerText = `📐 Дословный разбор фразы:\n\n"${item.sw}"\n\n(Детальный разбор конструкций появится в следующем обновлении. А пока смотрите в учебник!)`;
                     } else {
@@ -449,12 +436,28 @@ controls.appendChild(recBtn);
                     modal.style.display = 'flex';
                 };
 
+                // 3️⃣ Кнопка ЗАПИСИ СЕБЯ (RECORDER)
+                const recBtn = document.createElement('button');
+                recBtn.textContent = '🎤';
+                recBtn.style.background = '#8b4513';
+                recBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (currentRecBtn) return;
+                    currentRecBtn = recBtn;
+                    recBtn.textContent = '🔴';
+                    recBtn.style.background = '#8b0000';
+                    startRecording(item.sw);
+                };
+
+                // Добавляем все кнопки в панель управления
                 controls.appendChild(playBtn);
                 controls.appendChild(tipBtn);
+                controls.appendChild(recBtn);
 
                 card.appendChild(textDiv);
                 card.appendChild(controls);
 
+                // Логика переворота карточки (активный recall)
                 card.onclick = () => {
                     flipped = !flipped;
                     textDiv.textContent = flipped ? item.ru : item.sw;
