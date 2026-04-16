@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Лингво Тренажёр · Полиглот</title>
+    <title>Лингво Тренажёр · Полиглот 3.0</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -24,25 +24,48 @@
             text-align: center;
         }
 
-        /* Панель управления (выбор языка) */
+        /* Панель управления */
         .toolbar {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
             width: 100%;
             max-width: 600px;
             margin-bottom: 15px;
             color: #e0d5c1;
-            font-size: 18px;
         }
-        .lang-selector {
-            padding: 8px 16px;
+        .lang-selector, .ui-lang-selector {
+            padding: 8px 12px;
             border-radius: 20px;
             background: #1e3b1a;
             color: #e0d5c1;
             border: 1px solid #d4af37;
             font-weight: bold;
+        }
+        .settings-btn {
+            background: transparent;
+            border: 1px solid #d4af37;
+            color: #d4af37;
+            font-size: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .settings-panel {
+            display: none;
+            background: #1e3b1a;
+            padding: 16px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            width: 100%;
+            max-width: 600px;
+            border: 1px solid #d4af37;
+            color: #e0d5c1;
+        }
+        .settings-panel label {
+            display: block;
+            margin-bottom: 8px;
         }
 
         /* Вкладки */
@@ -130,20 +153,21 @@
         }
         .add-panel button:disabled { opacity: 0.6; }
 
-        /* Контейнер карточек */
+        /* Карточки */
         .cards-container {
             display: flex;
             flex-wrap: wrap;
             justify-content: center;
             gap: 16px;
-            max-width: 900px;
+            max-width: 1000px;
         }
         .card {
             background: #fcf9f0;
             border: 3px solid #d4af37;
             border-radius: 20px;
-            padding: 16px 10px 10px 10px;
-            width: 160px;
+            padding: 16px 8px 10px 8px;
+            width: 200px;
+            min-width: 180px;
             text-align: center;
             cursor: pointer;
             user-select: none;
@@ -154,7 +178,7 @@
         }
         .card:active { transform: translateY(3px); box-shadow: 0 3px 0 #1e3b1a; }
         .card-text {
-            font-size: 24px;
+            font-size: 22px;
             font-weight: bold;
             color: #1e3b1a;
             min-height: 60px;
@@ -163,6 +187,8 @@
             justify-content: center;
             margin-bottom: 10px;
             word-break: break-word;
+            line-height: 1.3;
+            padding: 0 4px;
         }
         .controls {
             display: flex;
@@ -176,8 +202,8 @@
             border: none;
             color: white;
             font-size: 20px;
-            width: 42px;
-            height: 42px;
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 4px 0 #142310;
@@ -186,8 +212,21 @@
             align-items: center;
             justify-content: center;
         }
+        .delete-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: transparent;
+            border: none;
+            color: #a00;
+            font-size: 20px;
+            cursor: pointer;
+            opacity: 0.6;
+            z-index: 5;
+        }
+        .delete-btn:active { opacity: 1; }
 
-        /* Модальное окно (X-Ray) */
+        /* Модальное окно */
         .modal {
             display: none;
             position: fixed;
@@ -237,28 +276,43 @@
     </style>
 </head>
 <body>
-    <h2>🌍 ЛингвоТренажёр</h2>
+    <h2>🌍 ЛингвоТренажёр 3.0</h2>
 
-    <!-- Выбор языка -->
+    <!-- Верхняя панель -->
     <div class="toolbar">
-        <span id="lang-flag">🇹🇿</span>
-        <span>Изучаю:</span>
-        <select id="lang-select" class="lang-selector">
-            <option value="sw" selected>🇹🇿 Суахили (Swahili)</option>
-            <option value="en">🇬🇧 Английский (English)</option>
-            <option value="fr">🇫🇷 Французский (French)</option>
-            <option value="de">🇩🇪 Немецкий (German)</option>
-            <option value="es">🇪🇸 Испанский (Spanish)</option>
-            <option value="it">🇮🇹 Итальянский (Italian)</option>
-            <option value="pt">🇵🇹 Португальский (Portuguese)</option>
-            <option value="nl">🇳🇱 Голландский (Dutch)</option>
-            <option value="ar">🇸🇦 Арабский (Arabic)</option>
-            <option value="zh-CN">🇨🇳 Китайский (Chinese)</option>
-            <option value="ja">🇯🇵 Японский (Japanese)</option>
-            <option value="ko">🇰🇷 Корейский (Korean)</option>
-            <option value="hi">🇮🇳 Хинди (Hindi)</option>
-            <option value="tr">🇹🇷 Турецкий (Turkish)</option>
+        <div style="display: flex; align-items: center; gap: 8px;">
+            <span id="lang-flag">🇹🇿</span>
+            <select id="lang-select" class="lang-selector">
+                <option value="sw" selected>Суахили</option>
+                <option value="en">English</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="es">Español</option>
+                <option value="it">Italiano</option>
+                <option value="pt">Português</option>
+                <option value="nl">Nederlands</option>
+                <option value="ar">العربية</option>
+                <option value="zh-CN">中文</option>
+                <option value="ja">日本語</option>
+                <option value="ko">한국어</option>
+                <option value="hi">हिन्दी</option>
+                <option value="tr">Türkçe</option>
+            </select>
+        </div>
+        <button class="settings-btn" id="settings-toggle">⚙️</button>
+    </div>
+
+    <!-- Панель настроек -->
+    <div class="settings-panel" id="settings-panel">
+        <label>🌐 Мой родной язык:</label>
+        <select id="ui-lang-select" class="ui-lang-selector">
+            <option value="ru" selected>Русский</option>
+            <option value="en">English</option>
+            <option value="de">Deutsch</option>
+            <option value="fr">Français</option>
+            <option value="es">Español</option>
         </select>
+        <p style="font-size: 14px; margin-top: 10px;">⚡ Влияет на язык подсказок и направление перевода.</p>
     </div>
 
     <!-- Вкладки -->
@@ -278,7 +332,7 @@
         <button id="add-item-btn">➕ Добавить</button>
     </div>
 
-    <!-- Контейнер для карточек -->
+    <!-- Карточки -->
     <div id="app" class="cards-container"></div>
 
     <!-- Бэкап -->
@@ -288,12 +342,12 @@
     </div>
     <input type="file" id="import-file-input" accept=".json">
 
-    <div class="footer">🧠 Активный recall · 🔍 Живой поиск · 🎤 Запись себя</div>
+    <div class="footer">🧠 Активный recall · 🎤 Ручная запись · ⚙️ Настройки</div>
 
-    <!-- Модальное окно для X-Ray -->
+    <!-- Модальное окно X-Ray -->
     <div class="modal" id="xray-modal">
         <div class="modal-content">
-            <h3>🧠 Разбор фразы</h3>
+            <h3>🧠 Разбор</h3>
             <p id="xray-text">Здесь будет детальный разбор.</p>
             <button id="close-modal">Понятно</button>
         </div>
@@ -301,34 +355,38 @@
 
     <script>
         // ================== ГЛОБАЛЬНЫЕ НАСТРОЙКИ ==================
-        let currentLang = 'sw';
+        let currentLang = 'sw';           // Изучаемый язык
+        let uiLang = 'ru';                // Родной язык (интерфейс)
         let currentTab = 'words';
         let words = [];
         let phrases = [];
 
-        // Флаги для отображения
+        // Флаги и названия
         const flags = { sw: '🇹🇿', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', nl: '🇳🇱', ar: '🇸🇦', 'zh-CN': '🇨🇳', ja: '🇯🇵', ko: '🇰🇷', hi: '🇮🇳', tr: '🇹🇷' };
         const langNames = { sw: 'суахили', en: 'английском', fr: 'французском', de: 'немецком', es: 'испанском', it: 'итальянском', pt: 'португальском', nl: 'голландском', ar: 'арабском', 'zh-CN': 'китайском', ja: 'японском', ko: 'корейском', hi: 'хинди', tr: 'турецком' };
         const langNamesFull = { sw: 'суахили', en: 'английский', fr: 'французский', de: 'немецкий', es: 'испанский', it: 'итальянский', pt: 'португальский', nl: 'голландский', ar: 'арабский', 'zh-CN': 'китайский', ja: 'японский', ko: 'корейский', hi: 'хинди', tr: 'турецкий' };
 
-        // ================== ХРАНЕНИЕ (с учётом языка) ==================
+        // Плейсхолдеры для поля ввода
+        const placeholders = {
+            ru: { sw: 'Введи слово или фразу на суахили...', en: 'Введи слово или фразу на английском...', fr: 'Введи слово или фразу на французском...', de: 'Введи слово или фразу на немецком...', es: 'Введи слово или фразу на испанском...' },
+            en: { sw: 'Enter a word or phrase in Swahili...', en: 'Enter a word or phrase in English...', fr: 'Enter a word or phrase in French...' },
+            de: { sw: 'Gib ein Wort oder einen Satz auf Swahili ein...', en: 'Gib ein Wort oder einen Satz auf Englisch ein...' }
+        };
+
+        // ================== ХРАНЕНИЕ ==================
         function getStorageKey(base) {
             return `lingvo_${currentLang}_${base}`;
         }
 
         function loadWords() {
             const stored = localStorage.getItem(getStorageKey('words'));
-            if (stored) {
-                try { return JSON.parse(stored); } catch(e) {}
-            }
+            if (stored) { try { return JSON.parse(stored); } catch(e) {} }
             return [];
         }
 
         function loadPhrases() {
             const stored = localStorage.getItem(getStorageKey('phrases'));
-            if (stored) {
-                try { return JSON.parse(stored); } catch(e) {}
-            }
+            if (stored) { try { return JSON.parse(stored); } catch(e) {} }
             return [];
         }
 
@@ -340,35 +398,64 @@
             localStorage.setItem(getStorageKey('phrases'), JSON.stringify(phrases));
         }
 
-        // ================== АУДИО РЕКОРДЕР ==================
+        // ================== АВАРИЙНЫЙ БЭКАП ==================
+        window.addEventListener('beforeunload', () => {
+            const emergency = { lang: currentLang, words, phrases, timestamp: new Date().toISOString() };
+            localStorage.setItem('lingvo_emergency_backup', JSON.stringify(emergency));
+        });
+
+        function tryEmergencyRestore() {
+            if (words.length === 0 && phrases.length === 0) {
+                const emergency = localStorage.getItem('lingvo_emergency_backup');
+                if (emergency) {
+                    try {
+                        const backup = JSON.parse(emergency);
+                        if (backup.lang === currentLang) {
+                            words = backup.words || [];
+                            phrases = backup.phrases || [];
+                            saveWords();
+                            savePhrases();
+                        }
+                    } catch(e) {}
+                }
+            }
+        }
+
+        // ================== АУДИО РЕКОРДЕР (РУЧНОЙ) ==================
         let mediaRecorder;
         let audioChunks = [];
         let currentRecBtn = null;
+        let isRecording = false;
 
-        async function startRecording(word) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-                    new Audio(URL.createObjectURL(blob)).play();
-                    stream.getTracks().forEach(t => t.stop());
-                    if (currentRecBtn) {
-                        currentRecBtn.textContent = '🎤';
-                        currentRecBtn.style.background = '#8b4513';
+        async function toggleRecording(btn, word) {
+            if (!isRecording) {
+                // Начать запись
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                        new Audio(URL.createObjectURL(blob)).play();
+                        stream.getTracks().forEach(t => t.stop());
+                        btn.textContent = '🎤';
+                        btn.style.background = '#8b4513';
+                        isRecording = false;
                         currentRecBtn = null;
-                    }
-                };
-                mediaRecorder.start();
-                setTimeout(() => { if (mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 3000);
-            } catch (err) {
-                alert('❌ Нет доступа к микрофону. Разрешите запись в браузере.');
-                if (currentRecBtn) {
-                    currentRecBtn.textContent = '🎤';
-                    currentRecBtn.style.background = '#8b4513';
-                    currentRecBtn = null;
+                    };
+                    mediaRecorder.start();
+                    btn.textContent = '🔴';
+                    btn.style.background = '#8b0000';
+                    isRecording = true;
+                    currentRecBtn = btn;
+                } catch (err) {
+                    alert('❌ Нет доступа к микрофону.');
+                }
+            } else {
+                // Остановить запись
+                if (mediaRecorder && mediaRecorder.state === 'recording') {
+                    mediaRecorder.stop();
                 }
             }
         }
@@ -380,18 +467,37 @@
         const addItemBtn = document.getElementById('add-item-btn');
         const langSelect = document.getElementById('lang-select');
         const langFlag = document.getElementById('lang-flag');
+        const uiLangSelect = document.getElementById('ui-lang-select');
+        const settingsToggle = document.getElementById('settings-toggle');
+        const settingsPanel = document.getElementById('settings-panel');
         const modal = document.getElementById('xray-modal');
         const xrayText = document.getElementById('xray-text');
 
-        // Переключение языка
+        // Переключение панели настроек
+        settingsToggle.addEventListener('click', () => {
+            settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
+        });
+
+        // Смена родного языка
+        uiLangSelect.addEventListener('change', (e) => {
+            uiLang = e.target.value;
+            updatePlaceholder();
+        });
+
+        function updatePlaceholder() {
+            const langName = langNames[currentLang] || currentLang;
+            const placeholdersMap = placeholders[uiLang] || placeholders.ru;
+            newItemInput.placeholder = placeholdersMap[currentLang] || `Введи слово или фразу на ${langName}...`;
+        }
+
+        // Переключение изучаемого языка
         function switchLanguage(lang) {
             currentLang = lang;
             langFlag.textContent = flags[lang] || '🌐';
-            newItemInput.placeholder = `Введи слово или фразу на ${langNames[lang] || 'языке'}...`;
-            
-            // Загружаем данные для нового языка
+            updatePlaceholder();
             words = loadWords();
             phrases = loadPhrases();
+            tryEmergencyRestore();
             renderCards();
         }
 
@@ -409,10 +515,22 @@
             });
         });
 
-        // Рендер карточек с учётом поиска
+        // Удаление карточки
+        function deleteItem(index) {
+            if (currentTab === 'words') {
+                words.splice(index, 1);
+                saveWords();
+            } else {
+                phrases.splice(index, 1);
+                savePhrases();
+            }
+            renderCards();
+        }
+
+        // Рендер карточек
         function renderCards() {
             const searchTerm = searchInput.value.trim().toLowerCase();
-            let items = currentTab === 'words' ? words : phrases;
+            let items = currentTab === 'words' ? [...words] : [...phrases];
 
             if (searchTerm) {
                 items = items.filter(item =>
@@ -429,9 +547,26 @@
                 return;
             }
 
-            items.forEach((item, index) => {
+            // Находим оригинальные индексы для удаления
+            const originalItems = currentTab === 'words' ? words : phrases;
+
+            items.forEach((item) => {
+                const originalIndex = originalItems.findIndex(orig => orig.sw === item.sw && orig.ru === item.ru);
+                
                 const card = document.createElement('div');
                 card.className = 'card';
+
+                // Крестик удаления
+                const delBtn = document.createElement('button');
+                delBtn.textContent = '✖';
+                delBtn.className = 'delete-btn';
+                delBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if (confirm(`Удалить "${item.ru}"?`)) {
+                        deleteItem(originalIndex);
+                    }
+                };
+                card.appendChild(delBtn);
 
                 const textDiv = document.createElement('div');
                 textDiv.className = 'card-text';
@@ -441,7 +576,7 @@
                 const controls = document.createElement('div');
                 controls.className = 'controls';
 
-                // 1️⃣ Озвучка
+                // Озвучка
                 const playBtn = document.createElement('button');
                 playBtn.textContent = '🔊';
                 playBtn.onclick = (e) => {
@@ -452,7 +587,7 @@
                     speechSynthesis.speak(utterance);
                 };
 
-                // 2️⃣ X-Ray
+                // X-Ray
                 const tipBtn = document.createElement('button');
                 tipBtn.textContent = '🧠';
                 tipBtn.style.background = '#4a6b45';
@@ -466,17 +601,13 @@
                     modal.style.display = 'flex';
                 };
 
-                // 3️⃣ Запись себя
+                // Запись (ручная)
                 const recBtn = document.createElement('button');
                 recBtn.textContent = '🎤';
                 recBtn.style.background = '#8b4513';
                 recBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if (currentRecBtn) return;
-                    currentRecBtn = recBtn;
-                    recBtn.textContent = '🔴';
-                    recBtn.style.background = '#8b0000';
-                    startRecording(item.sw);
+                    toggleRecording(recBtn, item.sw);
                 };
 
                 controls.appendChild(playBtn);
@@ -486,7 +617,8 @@
                 card.appendChild(textDiv);
                 card.appendChild(controls);
 
-                card.onclick = () => {
+                card.onclick = (e) => {
+                    if (e.target.tagName === 'BUTTON') return;
                     flipped = !flipped;
                     textDiv.textContent = flipped ? item.ru : item.sw;
                 };
@@ -502,7 +634,7 @@
         // Поиск
         searchInput.addEventListener('input', renderCards);
 
-        // ================== ДОБАВЛЕНИЕ (автоопределение) ==================
+        // ================== ДОБАВЛЕНИЕ ==================
         async function addNewItem() {
             const ruText = newItemInput.value.trim();
             if (!ruText) return;
@@ -511,33 +643,79 @@
             addItemBtn.textContent = '⏳ Перевод...';
 
             try {
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=${currentLang}&dt=t&q=${encodeURIComponent(ruText)}`;
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${uiLang}&tl=${currentLang}&dt=t&dt=md&q=${encodeURIComponent(ruText)}`;
                 const res = await fetch(url);
                 const data = await res.json();
-                const swText = data[0][0][0];
-
-                if (swText) {
-                    const newItem = { sw: swText, ru: ruText };
-                    
-                    if (ruText.includes(' ')) {
-                        phrases.push(newItem);
-                        savePhrases();
-                        if (currentTab !== 'phrases') {
-                            document.querySelector('[data-tab="phrases"]').click();
-                        }
-                    } else {
-                        words.push(newItem);
-                        saveWords();
-                        if (currentTab !== 'words') {
-                            document.querySelector('[data-tab="words"]').click();
+                
+                const alternatives = [];
+                if (data[0] && data[0].length) {
+                    for (let i = 0; i < data[0].length; i++) {
+                        const swText = data[0][i][0];
+                        if (swText && !alternatives.includes(swText)) {
+                            alternatives.push(swText);
                         }
                     }
-
-                    newItemInput.value = '';
-                    renderCards();
-                } else {
-                    alert('❌ Не удалось перевести.');
                 }
+                
+                if (data[1] && data[1].length) {
+                    for (let i = 0; i < data[1].length; i++) {
+                        if (data[1][i][1]) {
+                            for (let j = 0; j < data[1][i][1].length; j++) {
+                                const swText = data[1][i][1][j];
+                                if (swText && !alternatives.includes(swText)) {
+                                    alternatives.push(swText);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (alternatives.length === 0) {
+                    alert('❌ Не удалось перевести.');
+                    return;
+                }
+
+                let chosenSw = alternatives[0];
+                if (alternatives.length > 1) {
+                    let message = `"${ruText}"\n\nВыберите перевод:\n`;
+                    alternatives.forEach((alt, i) => { message += `\n${i+1}. ${alt}`; });
+                    const choice = prompt(message, '1');
+                    if (choice !== null) {
+                        const num = parseInt(choice, 10);
+                        if (!isNaN(num) && num >= 1 && num <= alternatives.length) {
+                            chosenSw = alternatives[num-1];
+                        }
+                    } else {
+                        return; // Отмена
+                    }
+                }
+
+                const newItem = { sw: chosenSw, ru: ruText };
+                
+                // Определяем слово или фраза
+                const wordCount = ruText.split(/\s+/).length;
+                let isPhrase = ruText.includes(' ') && wordCount >= 3;
+                
+                if (ruText.includes(' ') && wordCount === 2) {
+                    isPhrase = confirm(`"${ruText}" → "${chosenSw}"\n\nЭто ФРАЗА?\n(ОК = фраза, Отмена = слово)`);
+                }
+
+                if (isPhrase) {
+                    phrases.push(newItem);
+                    savePhrases();
+                    if (currentTab !== 'phrases') {
+                        document.querySelector('[data-tab="phrases"]').click();
+                    }
+                } else {
+                    words.push(newItem);
+                    saveWords();
+                    if (currentTab !== 'words') {
+                        document.querySelector('[data-tab="words"]').click();
+                    }
+                }
+
+                newItemInput.value = '';
+                renderCards();
             } catch (e) {
                 alert('❌ Ошибка сети.');
             } finally {
@@ -550,13 +728,26 @@
         newItemInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addNewItem(); });
 
         // ================== ЭКСПОРТ / ИМПОРТ ==================
-        document.getElementById('export-btn').addEventListener('click', () => {
+        document.getElementById('export-btn').addEventListener('click', async () => {
             const data = { lang: currentLang, words, phrases };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const fileName = `lingvo_${currentLang}_${new Date().toISOString().slice(0,10)}.json`;
+            
+            if (navigator.share && navigator.canShare) {
+                const file = new File([blob], fileName, { type: 'application/json' });
+                if (navigator.canShare({ files: [file] })) {
+                    try {
+                        await navigator.share({ title: 'Экспорт', files: [file] });
+                        return;
+                    } catch(e) {}
+                }
+            }
+            
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `lingvo_${currentLang}_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = fileName;
             a.click();
+            URL.revokeObjectURL(a.href);
         });
 
         document.getElementById('import-btn').addEventListener('click', () => {
@@ -570,23 +761,15 @@
             reader.onload = (ev) => {
                 try {
                     const imported = JSON.parse(ev.target.result);
-                    
                     if (imported.lang && imported.lang !== currentLang) {
                         const fileNameLang = langNamesFull[imported.lang] || imported.lang;
                         const currentLangName = langNamesFull[currentLang] || currentLang;
-                        if (!confirm(`⚠️ Файл для языка "${fileNameLang}", а выбран "${currentLangName}". Импортировать всё равно?`)) {
+                        if (!confirm(`⚠️ Файл для "${fileNameLang}", а выбран "${currentLangName}". Импортировать?`)) {
                             return;
                         }
                     }
-                    
-                    if (imported.words) {
-                        words = imported.words;
-                        saveWords();
-                    }
-                    if (imported.phrases) {
-                        phrases = imported.phrases;
-                        savePhrases();
-                    }
+                    if (imported.words) { words = imported.words; saveWords(); }
+                    if (imported.phrases) { phrases = imported.phrases; savePhrases(); }
                     renderCards();
                     alert('✅ Импорт завершён!');
                 } catch (err) {
@@ -599,6 +782,7 @@
 
         // ================== СТАРТ ==================
         switchLanguage('sw');
+        updatePlaceholder();
     </script>
 </body>
 </html>
