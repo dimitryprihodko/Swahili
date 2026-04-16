@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Суахили · Активный тренажёр</title>
+    <title>Суахили · ЛингвоТренажёр 2.0</title>
     <style>
         * { box-sizing: border-box; font-family: system-ui, 'Segoe UI', Roboto, sans-serif; }
         body {
@@ -23,7 +23,55 @@
             padding-bottom: 8px;
             text-align: center;
         }
-        .add-word-panel {
+        
+        /* Вкладки */
+        .tabs-container {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            background: #1e3b1a80;
+            padding: 8px;
+            border-radius: 50px;
+            backdrop-filter: blur(4px);
+            border: 1px solid #d4af37;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #b59a6b;
+            font-size: 18px;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab-btn.active {
+            background: #d4af37;
+            color: #1e3b1a;
+            box-shadow: 0 4px 0 #7a5c1a;
+        }
+        
+        /* Поиск */
+        .search-panel {
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+        .search-panel input {
+            width: 100%;
+            padding: 14px 20px;
+            font-size: 16px;
+            border-radius: 40px;
+            border: none;
+            background: #fcf9f0;
+            color: #1e3b1a;
+            font-weight: bold;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+        }
+        
+        /* Панель добавления */
+        .add-panel {
             background: #1e3b1a80;
             backdrop-filter: blur(4px);
             padding: 12px 16px;
@@ -37,7 +85,7 @@
             width: 100%;
             max-width: 600px;
         }
-        .add-word-panel input {
+        .add-panel input {
             flex: 2 1 200px;
             padding: 12px 16px;
             font-size: 16px;
@@ -46,9 +94,8 @@
             background: #fcf9f0;
             color: #1e3b1a;
             font-weight: bold;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
         }
-        .add-word-panel button {
+        .add-panel button {
             flex: 0 0 auto;
             padding: 12px 20px;
             font-size: 16px;
@@ -59,12 +106,10 @@
             border-radius: 40px;
             cursor: pointer;
             box-shadow: 0 4px 0 #7a5c1a;
-            transition: 0.05s linear;
-            border: 1px solid #ffe28c;
         }
-        .add-word-panel button:active { transform: translateY(4px); box-shadow: 0 1px 0 #7a5c1a; }
-        .add-word-panel button:disabled { opacity: 0.6; transform: none; box-shadow: 0 4px 0 #7a5c1a; }
+        .add-panel button:disabled { opacity: 0.6; }
         
+        /* Контейнер карточек */
         .cards-container {
             display: flex;
             flex-wrap: wrap;
@@ -86,7 +131,7 @@
             position: relative;
             touch-action: manipulation;
         }
-        .card:active { transform: translateY(3px); box-shadow: 0 3px 0 #1e3b1a, 0 2px 6px rgba(0,0,0,0.4); }
+        .card:active { transform: translateY(3px); box-shadow: 0 3px 0 #1e3b1a; }
         .card-text {
             font-size: 24px;
             font-weight: bold;
@@ -98,14 +143,20 @@
             margin-bottom: 10px;
             word-break: break-word;
         }
-        .controls { display: flex; justify-content: center; gap: 10px; border-top: 1px dashed #b59a6b; padding-top: 10px; }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            border-top: 1px dashed #b59a6b;
+            padding-top: 10px;
+        }
         .controls button {
             background: #2e4a2a;
             border: none;
             color: white;
-            font-size: 22px;
-            width: 46px;
-            height: 46px;
+            font-size: 20px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             cursor: pointer;
             box-shadow: 0 4px 0 #142310;
@@ -113,54 +164,11 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            touch-action: manipulation;
         }
-        .controls button:active { transform: translateY(3px); box-shadow: 0 1px 0 #142310; }
         
-        #active-challenge {
-            margin-top: 30px;
-            background: #1e3b1a80;
-            padding: 20px 20px;
-            border-radius: 40px;
-            backdrop-filter: blur(4px);
-            border: 2px solid #d4af37;
-            text-align: center;
-            width: 100%;
-            max-width: 600px;
-        }
-        #challenge-word-ru {
-            font-size: 32px;
-            font-weight: bold;
-            color: #fcf9f0;
-            margin: 15px 0;
-            text-shadow: 3px 3px 0 #0a1a08;
-        }
-        .challenge-btn {
-            background: #d4af37;
-            border: none;
-            color: #1e3b1a;
-            font-weight: bold;
-            padding: 14px 24px;
-            font-size: 20px;
-            border-radius: 50px;
-            margin: 6px;
-            cursor: pointer;
-            box-shadow: 0 5px 0 #7a5c1a;
-            transition: 0.05s linear;
-            border: 1px solid #ffe28c;
-            touch-action: manipulation;
-        }
-        .challenge-btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #7a5c1a; }
-        .challenge-btn:disabled { opacity: 0.5; transform: none; box-shadow: 0 5px 0 #7a5c1a; }
-        #recognition-result { margin-top: 16px; font-size: 20px; color: #ffe28c; min-height: 36px; }
-        .footer { margin-top: 30px; color: #b59a6b; text-align: center; }
-        .delete-btn {
-            position: absolute; top: 5px; right: 5px; background: transparent; border: none;
-            color: #a00; font-size: 20px; cursor: pointer; opacity: 0.6; z-index: 5;
-        }
-        .delete-btn:active { opacity: 1; }
+        /* Бэкап-панель */
         .backup-panel {
-            margin-top: 10px;
+            margin-top: 30px;
             display: flex;
             gap: 10px;
             justify-content: center;
@@ -174,44 +182,49 @@
             font-size: 14px;
             cursor: pointer;
         }
-        .backup-btn:active { background: #b59a6b20; }
         #import-file-input { display: none; }
+        .footer { margin-top: 20px; color: #b59a6b; text-align: center; }
     </style>
 </head>
 <body>
-    <h2>📚 Суахили · Активный тренажёр</h2>
+    <h2>📚 Суахили · Тренажёр 2.0</h2>
     
-    <div class="add-word-panel">
-        <input type="text" id="new-word-input" placeholder="Введи фразу на русском..." value="Я хочу пить">
-        <button id="add-word-btn">➕ Добавить</button>
+    <!-- Вкладки -->
+    <div class="tabs-container">
+        <button class="tab-btn active" data-tab="words">📝 Слова</button>
+        <button class="tab-btn" data-tab="phrases">💬 Фразы</button>
+        <button class="tab-btn" data-tab="patterns">🧩 Конструкты</button>
+    </div>
+    
+    <!-- Поиск -->
+    <div class="search-panel">
+        <input type="text" id="search-input" placeholder="🔍 Поиск...">
+    </div>
+    
+    <!-- Панель добавления (меняется в зависимости от вкладки) -->
+    <div class="add-panel" id="add-panel">
+        <input type="text" id="new-item-input" placeholder="Введи слово на русском...">
+        <button id="add-item-btn">➕ Добавить</button>
     </div>
 
+    <!-- Контейнер для карточек -->
     <div id="app" class="cards-container"></div>
     
-    <div id="active-challenge">
-        <h3>🗣️ Произнеси вслух</h3>
-        <div id="challenge-word-ru">Нажми «Случайное слово»</div>
-        <div>
-            <button class="challenge-btn" id="start-challenge-btn">🎲 Случайное</button>
-            <button class="challenge-btn" id="speak-answer-btn" style="display: none;">🎤 Ответить</button>
-        </div>
-        <div id="recognition-result"></div>
+    <!-- Бэкап -->
+    <div class="backup-panel">
+        <button class="backup-btn" id="export-btn">📤 Экспорт</button>
+        <button class="backup-btn" id="import-btn">📥 Импорт</button>
     </div>
+    <input type="file" id="import-file-input" accept=".json">
     
-    <div class="footer">
-        🇹🇿 русский → суахили · 🔊 слушай · 🔄 проверь · 🎤 запиши себя
-        <div class="backup-panel">
-            <button class="backup-btn" id="export-btn">📤 Экспорт слов</button>
-            <button class="backup-btn" id="import-btn">📥 Импорт слов</button>
-        </div>
-        <input type="file" id="import-file-input" accept=".json,application/json">
-    </div>
+    <div class="footer">🇹🇿 Активный recall · 🔊 слушай · 🧠 разбор</div>
 
     <script>
-        // ================== ХРАНЕНИЕ В LOCALSTORAGE ==================
-        const STORAGE_KEY = 'swahili_words';
+        // ================== ГЛОБАЛЬНЫЕ НАСТРОЙКИ ==================
+        const STORAGE_WORDS = 'swahili_words_v2';
+        const STORAGE_PHRASES = 'swahili_phrases_v2';
         
-        // Стартовый набор слов
+        // Стартовые наборы
         const DEFAULT_WORDS = [
             { sw: 'Jina', ru: 'Имя' },
             { sw: 'Nani', ru: 'Кто' },
@@ -227,246 +240,211 @@
             { sw: 'Kwa heri', ru: 'До свидания' },
             { sw: 'Twende', ru: 'Поехали!' }
         ];
-
-        // Загружаем слова из localStorage или используем стартовые
-        function loadWords() {
-            const stored = localStorage.getItem(STORAGE_KEY);
+        
+        const DEFAULT_PHRASES = [
+            { sw: 'Jina langu ni ...', ru: 'Меня зовут ...' },
+            { sw: 'Ninatoka Urusi', ru: 'Я из России' },
+            { sw: 'Hakuna matata', ru: 'Нет проблем' }
+        ];
+        
+        // Текущее состояние
+        let currentTab = 'words';
+        let words = loadFromStorage(STORAGE_WORDS, DEFAULT_WORDS);
+        let phrases = loadFromStorage(STORAGE_PHRASES, DEFAULT_PHRASES);
+        
+        // ================== ХРАНЕНИЕ ==================
+        function loadFromStorage(key, defaultData) {
+            const stored = localStorage.getItem(key);
             if (stored) {
-                try {
-                    return JSON.parse(stored);
-                } catch (e) {
-                    console.error('Ошибка загрузки слов:', e);
-                }
+                try { return JSON.parse(stored); } catch(e) {}
             }
-            return [...DEFAULT_WORDS]; // копия массива
-        }
-
-        // Сохраняем слова в localStorage
-        function saveWords(wordsArray) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(wordsArray));
-        }
-
-        let words = loadWords();
-
-        // ================== АУДИО РЕКОРДЕР ==================
-        let mediaRecorder;
-        let audioChunks = [];
-        let currentRecBtn = null;
-
-        async function startRecording(word) {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-                mediaRecorder.onstop = () => {
-                    const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-                    new Audio(URL.createObjectURL(blob)).play();
-                    stream.getTracks().forEach(t => t.stop());
-                    if (currentRecBtn) {
-                        currentRecBtn.textContent = '🎤';
-                        currentRecBtn.style.background = '#2e4a2a';
-                        currentRecBtn = null;
-                    }
-                };
-                mediaRecorder.start();
-                setTimeout(() => { if (mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 3000);
-            } catch (err) {
-                alert('❌ Нет доступа к микрофону');
-                if (currentRecBtn) { currentRecBtn.textContent = '🎤'; currentRecBtn.style.background = '#2e4a2a'; currentRecBtn = null; }
-            }
+            return [...defaultData];
         }
         
-        // ================== GOOGLE SPEECH RECOGNITION ==================
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-        if (recognition) {
-            recognition.lang = 'sw-KE';
-            recognition.interimResults = false;
-            recognition.maxAlternatives = 1;
+        function saveToStorage(key, data) {
+            localStorage.setItem(key, JSON.stringify(data));
         }
-        let currentChallengeWord = null;
-
+        
+        // ================== ИНТЕРФЕЙС ==================
         const app = document.getElementById('app');
-
-        function renderCards() {
-            if (!app) return;
-            app.innerHTML = '';
-            words.forEach((w, index) => {
-                const card = document.createElement('div'); card.className = 'card';
-                const textDiv = document.createElement('div'); textDiv.className = 'card-text';
-                textDiv.textContent = w.ru;
-                let flipped = true;
+        const searchInput = document.getElementById('search-input');
+        const addPanel = document.getElementById('add-panel');
+        const newItemInput = document.getElementById('new-item-input');
+        const addItemBtn = document.getElementById('add-item-btn');
+        
+        // Вкладки
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentTab = btn.dataset.tab;
                 
-                const controls = document.createElement('div'); controls.className = 'controls';
-                
-                // Кнопка удаления (только для слов, добавленных пользователем)
-                if (index >= DEFAULT_WORDS.length) {
-                    const delBtn = document.createElement('button');
-                    delBtn.textContent = '✖'; delBtn.className = 'delete-btn';
-                    delBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        words.splice(index, 1);
-                        saveWords(words);
-                        renderCards();
-                    };
-                    card.appendChild(delBtn);
+                // Меняем плейсхолдер в поле ввода
+                if (currentTab === 'words') {
+                    newItemInput.placeholder = 'Введи слово на русском...';
+                } else if (currentTab === 'phrases') {
+                    newItemInput.placeholder = 'Введи фразу на русском...';
+                } else {
+                    newItemInput.placeholder = 'Конструкты — в разработке 🧩';
                 }
                 
-                const playBtn = document.createElement('button'); playBtn.textContent = '🔊';
+                renderCards();
+            });
+        });
+        
+        // Рендер карточек с учётом поиска
+        function renderCards() {
+            const searchTerm = searchInput.value.trim().toLowerCase();
+            let items = currentTab === 'words' ? words : phrases;
+            
+            // Фильтрация
+            if (searchTerm) {
+                items = items.filter(item => 
+                    item.sw.toLowerCase().includes(searchTerm) || 
+                    item.ru.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            app.innerHTML = '';
+            
+            if (currentTab === 'patterns') {
+                app.innerHTML = '<div style="color:#e0d5c1; padding:40px; text-align:center;">🧩 Конструкты скоро появятся!<br>Здесь будет генератор фраз по шаблонам.</div>';
+                return;
+            }
+            
+            items.forEach((item, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                
+                const textDiv = document.createElement('div');
+                textDiv.className = 'card-text';
+                textDiv.textContent = item.ru;
+                let flipped = true;
+                
+                const controls = document.createElement('div');
+                controls.className = 'controls';
+                
+                // 🔊 Озвучка
+                const playBtn = document.createElement('button');
+                playBtn.textContent = '🔊';
                 playBtn.onclick = (e) => {
                     e.stopPropagation();
-                    const utterance = new SpeechSynthesisUtterance(w.sw);
+                    const utterance = new SpeechSynthesisUtterance(item.sw);
                     utterance.lang = 'sw-KE';
                     utterance.rate = 0.9;
-                    const voices = speechSynthesis.getVoices();
-                    const swahiliVoice = voices.find(v => v.lang.includes('sw') || v.lang.includes('ke'));
-                    if (swahiliVoice) utterance.voice = swahiliVoice;
                     speechSynthesis.speak(utterance);
                 };
                 
-                const recBtn = document.createElement('button'); recBtn.textContent = '🎤';
-                recBtn.onclick = (e) => {
+                // 🧠 Справка (заглушка)
+                const tipBtn = document.createElement('button');
+                tipBtn.textContent = '🧠';
+                tipBtn.style.background = '#4a6b45';
+                tipBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if (currentRecBtn) return;
-                    currentRecBtn = recBtn; recBtn.textContent = '🔴'; recBtn.style.background = '#8b0000';
-                    startRecording(w.sw);
+                    alert(`🧠 Справка по "${item.sw}":\n\n(Разбор будет добавлен в следующей версии)`);
                 };
                 
-                controls.appendChild(playBtn); controls.appendChild(recBtn);
-                card.appendChild(textDiv); card.appendChild(controls);
-                card.onclick = () => { flipped = !flipped; textDiv.textContent = flipped ? w.ru : w.sw; };
+                controls.appendChild(playBtn);
+                controls.appendChild(tipBtn);
+                
+                card.appendChild(textDiv);
+                card.appendChild(controls);
+                
+                card.onclick = () => {
+                    flipped = !flipped;
+                    textDiv.textContent = flipped ? item.ru : item.sw;
+                };
+                
                 app.appendChild(card);
             });
         }
-
-        // ================== ДОБАВЛЕНИЕ СЛОВА ==================
-        const inputField = document.getElementById('new-word-input');
-        const addBtn = document.getElementById('add-word-btn');
         
-        async function translateAndAdd() {
-            const ruText = inputField.value.trim();
+        // Поиск (живой фильтр)
+        searchInput.addEventListener('input', renderCards);
+        
+        // ================== ДОБАВЛЕНИЕ ==================
+        async function addNewItem() {
+            const ruText = newItemInput.value.trim();
             if (!ruText) return;
             
-            addBtn.disabled = true;
-            addBtn.textContent = '⏳ Перевожу...';
+            addItemBtn.disabled = true;
+            addItemBtn.textContent = '⏳ Перевод...';
             
             try {
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=ru&tl=sw&dt=t&q=${encodeURIComponent(ruText)}`;
-                const response = await fetch(url);
-                const data = await response.json();
+                const res = await fetch(url);
+                const data = await res.json();
                 const swText = data[0][0][0];
                 
                 if (swText) {
-                    words.push({ sw: swText, ru: ruText });
-                    saveWords(words);
+                    const newItem = { sw: swText, ru: ruText };
+                    
+                    if (currentTab === 'words') {
+                        words.push(newItem);
+                        saveToStorage(STORAGE_WORDS, words);
+                    } else if (currentTab === 'phrases') {
+                        phrases.push(newItem);
+                        saveToStorage(STORAGE_PHRASES, phrases);
+                    }
+                    
+                    newItemInput.value = '';
                     renderCards();
-                    inputField.value = '';
                 } else {
                     alert('❌ Не удалось перевести.');
                 }
             } catch (e) {
-                alert('❌ Ошибка сети. Попробуйте позже.');
+                alert('❌ Ошибка сети.');
             } finally {
-                addBtn.disabled = false;
-                addBtn.textContent = '➕ Добавить';
+                addItemBtn.disabled = false;
+                addItemBtn.textContent = '➕ Добавить';
             }
         }
         
-        addBtn.addEventListener('click', translateAndAdd);
-        inputField.addEventListener('keypress', (e) => { if(e.key === 'Enter') translateAndAdd(); });
-
+        addItemBtn.addEventListener('click', addNewItem);
+        newItemInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addNewItem();
+        });
+        
         // ================== ЭКСПОРТ / ИМПОРТ ==================
         document.getElementById('export-btn').addEventListener('click', () => {
-            const dataStr = JSON.stringify(words, null, 2);
-            const blob = new Blob([dataStr], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
+            const data = { words, phrases };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
-            a.href = url;
-            a.download = `swahili_words_${new Date().toISOString().slice(0,10)}.json`;
+            a.href = URL.createObjectURL(blob);
+            a.download = `swahili_backup_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
-            URL.revokeObjectURL(url);
         });
-
+        
         document.getElementById('import-btn').addEventListener('click', () => {
             document.getElementById('import-file-input').click();
         });
-
-        document.getElementById('import-file-input').addEventListener('change', (event) => {
-            const file = event.target.files[0];
+        
+        document.getElementById('import-file-input').addEventListener('change', (e) => {
+            const file = e.target.files[0];
             if (!file) return;
-            
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = (ev) => {
                 try {
-                    const imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported) && imported.every(w => w.sw && w.ru)) {
-                        words = imported;
-                        saveWords(words);
-                        renderCards();
-                        alert(`✅ Импортировано ${imported.length} слов.`);
-                    } else {
-                        alert('❌ Неверный формат файла. Ожидается массив объектов {sw, ru}.');
+                    const imported = JSON.parse(ev.target.result);
+                    if (imported.words) {
+                        words = imported.words;
+                        saveToStorage(STORAGE_WORDS, words);
                     }
+                    if (imported.phrases) {
+                        phrases = imported.phrases;
+                        saveToStorage(STORAGE_PHRASES, phrases);
+                    }
+                    renderCards();
+                    alert('✅ Импорт завершён!');
                 } catch (err) {
-                    alert('❌ Ошибка чтения JSON-файла.');
+                    alert('❌ Ошибка чтения файла.');
                 }
-                event.target.value = '';
+                e.target.value = '';
             };
             reader.readAsText(file);
         });
-
-        // ================== ТРЕНИРОВКА ==================
-        const startBtn = document.getElementById('start-challenge-btn');
-        const speakBtn = document.getElementById('speak-answer-btn');
-        const challengeWordRuDiv = document.getElementById('challenge-word-ru');
-        const resultDiv = document.getElementById('recognition-result');
-
-        function pickRandomChallenge() {
-            if (words.length === 0) return;
-            const randomIndex = Math.floor(Math.random() * words.length);
-            currentChallengeWord = words[randomIndex];
-            challengeWordRuDiv.textContent = `👉 ${currentChallengeWord.ru} 👈`;
-            speakBtn.style.display = 'inline-block';
-            startBtn.textContent = '🔄 Другое слово';
-            resultDiv.textContent = '';
-        }
-
-        function startListening() {
-            if (!recognition) { alert('❌ Браузер не поддерживает распознавание речи'); return; }
-            if (!currentChallengeWord) return;
-            
-            recognition.start();
-            speakBtn.textContent = '🔴 Говорите...';
-            speakBtn.disabled = true;
-            resultDiv.textContent = '🎙️ Слушаю...';
-
-            recognition.onresult = (event) => {
-                const spoken = event.results[0][0].transcript.trim().toLowerCase();
-                const correct = currentChallengeWord.sw.toLowerCase();
-                if (spoken.includes(correct) || correct.includes(spoken)) {
-                    resultDiv.innerHTML = `✅ Отлично! Вы сказали: "${spoken}"`;
-                } else {
-                    resultDiv.innerHTML = `❌ Ожидалось "${currentChallengeWord.sw}", а услышано: "${spoken}"`;
-                }
-                speakBtn.textContent = '🎤 Ответить';
-                speakBtn.disabled = false;
-            };
-            
-            recognition.onerror = (e) => {
-                resultDiv.textContent = `❌ Ошибка: ${e.error}`;
-                speakBtn.textContent = '🎤 Ответить';
-                speakBtn.disabled = false;
-            };
-            
-            recognition.onend = () => {
-                if (speakBtn.disabled) { speakBtn.textContent = '🎤 Ответить'; speakBtn.disabled = false; }
-            };
-        }
-
-        startBtn.addEventListener('click', pickRandomChallenge);
-        speakBtn.addEventListener('click', startListening);
         
+        // Старт
         renderCards();
     </script>
 </body>
