@@ -226,7 +226,7 @@
         }
         .delete-btn:active { opacity: 1; }
 
-        /* Модальное окно */
+        /* Модальное окно X-Ray */
         .modal {
             display: none;
             position: fixed;
@@ -240,10 +240,36 @@
             background: #fcf9f0;
             padding: 20px;
             border-radius: 20px;
-            max-width: 400px;
+            max-width: 500px;
             width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
             border: 3px solid #d4af37;
             color: #1e3b1a;
+        }
+        .modal-content table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 10px 0;
+        }
+        .modal-content td, .modal-content th {
+            padding: 8px;
+            border-bottom: 1px solid #b59a6b;
+            text-align: left;
+        }
+        .modal-content .known-word {
+            color: #d4af37;
+            font-weight: bold;
+        }
+        .modal-content .add-to-dict {
+            background: #2e4a2a;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-left: 8px;
         }
         .modal-content button {
             margin-top: 20px;
@@ -291,12 +317,6 @@
                 <option value="it">Italiano</option>
                 <option value="pt">Português</option>
                 <option value="nl">Nederlands</option>
-                <option value="ar">العربية</option>
-                <option value="zh-CN">中文</option>
-                <option value="ja">日本語</option>
-                <option value="ko">한국어</option>
-                <option value="hi">हिन्दी</option>
-                <option value="tr">Türkçe</option>
             </select>
         </div>
         <button class="settings-btn" id="settings-toggle">⚙️</button>
@@ -312,7 +332,6 @@
             <option value="fr">Français</option>
             <option value="es">Español</option>
         </select>
-        <p style="font-size: 14px; margin-top: 10px;">⚡ Влияет на язык подсказок и направление перевода.</p>
     </div>
 
     <!-- Вкладки -->
@@ -342,35 +361,94 @@
     </div>
     <input type="file" id="import-file-input" accept=".json">
 
-    <div class="footer">🧠 Активный recall · 🎤 Ручная запись · ⚙️ Настройки</div>
+    <div class="footer">🧠 Активный recall · 🎤 Ручная запись · 🔬 X-Ray разбор</div>
 
     <!-- Модальное окно X-Ray -->
     <div class="modal" id="xray-modal">
-        <div class="modal-content">
-            <h3>🧠 Разбор</h3>
-            <p id="xray-text">Здесь будет детальный разбор.</p>
+        <div class="modal-content" id="xray-content">
+            <h3>🧠 Разбор фразы</h3>
+            <div id="xray-text">Здесь будет детальный разбор.</div>
             <button id="close-modal">Понятно</button>
         </div>
     </div>
 
     <script>
+        // ================== СЛОВАРЬ РАЗБОРА ФРАЗ (X-RAY) ==================
+        const PHRASE_BREAKDOWN = {
+            // Суахили
+            'Ninatoka Urusi': {
+                parts: [
+                    { text: 'Ni-', meaning: 'Я', type: 'prefix' },
+                    { text: '-na-', meaning: 'наст. время', type: 'infix' },
+                    { text: '-toka', meaning: 'происходить', type: 'verb' },
+                    { text: 'Urusi', meaning: 'Россия', type: 'noun' }
+                ],
+                literal: 'Я-сейчас-происходить Россия'
+            },
+            'Ninatoka': {
+                parts: [
+                    { text: 'Ni-', meaning: 'Я', type: 'prefix' },
+                    { text: '-na-', meaning: 'наст. время', type: 'infix' },
+                    { text: '-toka', meaning: 'происходить', type: 'verb' }
+                ],
+                literal: 'Я-сейчас-происходить'
+            },
+            'Anafanya kazi': {
+                parts: [
+                    { text: 'A-', meaning: 'Он/Она', type: 'prefix' },
+                    { text: '-na-', meaning: 'наст. время', type: 'infix' },
+                    { text: '-fanya', meaning: 'делать', type: 'verb' },
+                    { text: 'kazi', meaning: 'работа', type: 'noun' }
+                ],
+                literal: 'Он/она-сейчас-делать работа'
+            },
+            'Nakubaliana nawe': {
+                parts: [
+                    { text: 'Ni-', meaning: 'Я', type: 'prefix' },
+                    { text: '-na-', meaning: 'наст. время', type: 'infix' },
+                    { text: '-kubaliana', meaning: 'соглашаться', type: 'verb' },
+                    { text: 'nawe', meaning: 'с тобой', type: 'phrase' }
+                ],
+                literal: 'Я-сейчас-соглашаться с тобой'
+            },
+            'Hakuna matata': {
+                parts: [
+                    { text: 'Hakuna', meaning: 'нет (места)', type: 'verb' },
+                    { text: 'matata', meaning: 'проблемы', type: 'noun' }
+                ],
+                literal: 'Нет проблем'
+            },
+            'Jina langu ni': {
+                parts: [
+                    { text: 'Jina', meaning: 'имя', type: 'noun' },
+                    { text: 'langu', meaning: 'моё', type: 'possessive' },
+                    { text: 'ni', meaning: 'есть', type: 'copula' }
+                ],
+                literal: 'Имя моё есть'
+            },
+            'Asante sana': {
+                parts: [
+                    { text: 'Asante', meaning: 'спасибо', type: 'interjection' },
+                    { text: 'sana', meaning: 'очень', type: 'adverb' }
+                ],
+                literal: 'Спасибо очень'
+            }
+        };
+
         // ================== ГЛОБАЛЬНЫЕ НАСТРОЙКИ ==================
-        let currentLang = 'sw';           // Изучаемый язык
-        let uiLang = 'ru';                // Родной язык (интерфейс)
+        let currentLang = 'sw';
+        let uiLang = 'ru';
         let currentTab = 'words';
         let words = [];
         let phrases = [];
 
-        // Флаги и названия
-        const flags = { sw: '🇹🇿', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', nl: '🇳🇱', ar: '🇸🇦', 'zh-CN': '🇨🇳', ja: '🇯🇵', ko: '🇰🇷', hi: '🇮🇳', tr: '🇹🇷' };
-        const langNames = { sw: 'суахили', en: 'английском', fr: 'французском', de: 'немецком', es: 'испанском', it: 'итальянском', pt: 'португальском', nl: 'голландском', ar: 'арабском', 'zh-CN': 'китайском', ja: 'японском', ko: 'корейском', hi: 'хинди', tr: 'турецком' };
-        const langNamesFull = { sw: 'суахили', en: 'английский', fr: 'французский', de: 'немецкий', es: 'испанский', it: 'итальянский', pt: 'португальский', nl: 'голландский', ar: 'арабский', 'zh-CN': 'китайский', ja: 'японский', ko: 'корейский', hi: 'хинди', tr: 'турецкий' };
+        const flags = { sw: '🇹🇿', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', nl: '🇳🇱' };
+        const langNames = { sw: 'суахили', en: 'английском', fr: 'французском', de: 'немецком', es: 'испанском', it: 'итальянском', pt: 'португальском', nl: 'голландском' };
+        const langNamesFull = { sw: 'суахили', en: 'английский', fr: 'французский', de: 'немецкий', es: 'испанский', it: 'итальянский', pt: 'португальский', nl: 'голландский' };
 
-        // Плейсхолдеры для поля ввода
         const placeholders = {
-            ru: { sw: 'Введи слово или фразу на суахили...', en: 'Введи слово или фразу на английском...', fr: 'Введи слово или фразу на французском...', de: 'Введи слово или фразу на немецком...', es: 'Введи слово или фразу на испанском...' },
-            en: { sw: 'Enter a word or phrase in Swahili...', en: 'Enter a word or phrase in English...', fr: 'Enter a word or phrase in French...' },
-            de: { sw: 'Gib ein Wort oder einen Satz auf Swahili ein...', en: 'Gib ein Wort oder einen Satz auf Englisch ein...' }
+            ru: { sw: 'Введи слово или фразу на суахили...', en: 'Введи слово или фразу на английском...' },
+            en: { sw: 'Enter a word or phrase in Swahili...', en: 'Enter a word or phrase in English...' }
         };
 
         // ================== ХРАНЕНИЕ ==================
@@ -429,7 +507,6 @@
 
         async function toggleRecording(btn, word) {
             if (!isRecording) {
-                // Начать запись
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
@@ -453,11 +530,85 @@
                     alert('❌ Нет доступа к микрофону.');
                 }
             } else {
-                // Остановить запись
                 if (mediaRecorder && mediaRecorder.state === 'recording') {
                     mediaRecorder.stop();
                 }
             }
+        }
+
+        // ================== X-RAY: РАЗБОР И ДОБАВЛЕНИЕ В СЛОВАРЬ ==================
+        function isWordKnown(swText) {
+            return words.some(w => w.sw === swText);
+        }
+
+        async function addPartToDictionary(part) {
+            const ruText = part.meaning || part.text;
+            try {
+                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ru&dt=t&q=${encodeURIComponent(part.text)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const translated = data[0][0][0] || part.meaning || part.text;
+                
+                const newWord = { sw: part.text, ru: translated };
+                words.push(newWord);
+                saveWords();
+                alert(`✅ "${part.text}" добавлено в словарь как "${translated}"`);
+                renderCards();
+            } catch (e) {
+                // Fallback
+                const newWord = { sw: part.text, ru: part.meaning || part.text };
+                words.push(newWord);
+                saveWords();
+                alert(`✅ "${part.text}" добавлено в словарь`);
+                renderCards();
+            }
+        }
+
+        function showXRay(phraseText) {
+            const breakdown = PHRASE_BREAKDOWN[phraseText];
+            const xrayDiv = document.getElementById('xray-text');
+            
+            if (breakdown) {
+                let html = `<p><strong>🇹🇿 ${phraseText}</strong></p>`;
+                html += `<table>`;
+                html += `<tr><th>Часть</th><th>Значение</th><th>В словаре?</th></tr>`;
+                
+                breakdown.parts.forEach(part => {
+                    const known = isWordKnown(part.text);
+                    html += `<tr>`;
+                    html += `<td><span class="${known ? 'known-word' : ''}">${part.text}</span></td>`;
+                    html += `<td>${part.meaning} (${part.type})</td>`;
+                    html += `<td>`;
+                    if (!known) {
+                        html += `<button class="add-to-dict" data-part="${part.text}" data-meaning="${part.meaning}">➕</button>`;
+                    } else {
+                        html += `✅`;
+                    }
+                    html += `</td>`;
+                    html += `</tr>`;
+                });
+                
+                html += `</table>`;
+                html += `<p><strong>📐 Дословно:</strong> ${breakdown.literal}</p>`;
+                xrayDiv.innerHTML = html;
+                
+                // Вешаем обработчики на кнопки добавления
+                xrayDiv.querySelectorAll('.add-to-dict').forEach(btn => {
+                    btn.addEventListener('click', async (e) => {
+                        const partText = btn.dataset.part;
+                        const meaning = btn.dataset.meaning;
+                        await addPartToDictionary({ text: partText, meaning: meaning });
+                        // Обновляем X-Ray после добавления
+                        showXRay(phraseText);
+                    });
+                });
+            } else {
+                // Заглушка для неизвестных фраз
+                xrayDiv.innerHTML = `<p>🔬 Разбор для фразы <strong>"${phraseText}"</strong> пока не добавлен в словарь разбора.</p>`;
+                xrayDiv.innerHTML += `<p>📖 Попробуйте добавить её части вручную во вкладку «Слова».</p>`;
+            }
+            
+            document.getElementById('xray-modal').style.display = 'flex';
         }
 
         // ================== ИНТЕРФЕЙС ==================
@@ -471,14 +622,11 @@
         const settingsToggle = document.getElementById('settings-toggle');
         const settingsPanel = document.getElementById('settings-panel');
         const modal = document.getElementById('xray-modal');
-        const xrayText = document.getElementById('xray-text');
 
-        // Переключение панели настроек
         settingsToggle.addEventListener('click', () => {
             settingsPanel.style.display = settingsPanel.style.display === 'none' ? 'block' : 'none';
         });
 
-        // Смена родного языка
         uiLangSelect.addEventListener('change', (e) => {
             uiLang = e.target.value;
             updatePlaceholder();
@@ -490,7 +638,6 @@
             newItemInput.placeholder = placeholdersMap[currentLang] || `Введи слово или фразу на ${langName}...`;
         }
 
-        // Переключение изучаемого языка
         function switchLanguage(lang) {
             currentLang = lang;
             langFlag.textContent = flags[lang] || '🌐';
@@ -501,11 +648,8 @@
             renderCards();
         }
 
-        langSelect.addEventListener('change', (e) => {
-            switchLanguage(e.target.value);
-        });
+        langSelect.addEventListener('change', (e) => switchLanguage(e.target.value));
 
-        // Вкладки
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -515,7 +659,6 @@
             });
         });
 
-        // Удаление карточки
         function deleteItem(index) {
             if (currentTab === 'words') {
                 words.splice(index, 1);
@@ -527,7 +670,6 @@
             renderCards();
         }
 
-        // Рендер карточек
         function renderCards() {
             const searchTerm = searchInput.value.trim().toLowerCase();
             let items = currentTab === 'words' ? [...words] : [...phrases];
@@ -547,7 +689,6 @@
                 return;
             }
 
-            // Находим оригинальные индексы для удаления
             const originalItems = currentTab === 'words' ? words : phrases;
 
             items.forEach((item) => {
@@ -556,7 +697,6 @@
                 const card = document.createElement('div');
                 card.className = 'card';
 
-                // Крестик удаления
                 const delBtn = document.createElement('button');
                 delBtn.textContent = '✖';
                 delBtn.className = 'delete-btn';
@@ -576,7 +716,6 @@
                 const controls = document.createElement('div');
                 controls.className = 'controls';
 
-                // Озвучка
                 const playBtn = document.createElement('button');
                 playBtn.textContent = '🔊';
                 playBtn.onclick = (e) => {
@@ -587,21 +726,18 @@
                     speechSynthesis.speak(utterance);
                 };
 
-                // X-Ray
                 const tipBtn = document.createElement('button');
                 tipBtn.textContent = '🧠';
                 tipBtn.style.background = '#4a6b45';
                 tipBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (currentTab === 'phrases') {
-                        xrayText.innerText = `📐 Дословный разбор фразы:\n\n"${item.sw}"\n\n(Детальный разбор появится позже)`;
+                        showXRay(item.sw);
                     } else {
-                        xrayText.innerText = `📖 Слово: "${item.sw}"\n\nПеревод: ${item.ru}\n\nГрамматическая справка будет здесь.`;
+                        showXRay(item.sw);
                     }
-                    modal.style.display = 'flex';
                 };
 
-                // Запись (ручная)
                 const recBtn = document.createElement('button');
                 recBtn.textContent = '🎤';
                 recBtn.style.background = '#8b4513';
@@ -627,11 +763,9 @@
             });
         }
 
-        // Закрытие модалки
         document.getElementById('close-modal').addEventListener('click', () => modal.style.display = 'none');
         window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-        // Поиск
         searchInput.addEventListener('input', renderCards);
 
         // ================== ДОБАВЛЕНИЕ ==================
@@ -686,13 +820,12 @@
                             chosenSw = alternatives[num-1];
                         }
                     } else {
-                        return; // Отмена
+                        return;
                     }
                 }
 
                 const newItem = { sw: chosenSw, ru: ruText };
                 
-                // Определяем слово или фраза
                 const wordCount = ruText.split(/\s+/).length;
                 let isPhrase = ruText.includes(' ') && wordCount >= 3;
                 
