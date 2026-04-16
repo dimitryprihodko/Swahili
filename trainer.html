@@ -27,12 +27,14 @@
         /* Панель управления (выбор языка) */
         .toolbar {
             display: flex;
-            justify-content: space-between;
+            justify-content: center;
             align-items: center;
+            gap: 8px;
             width: 100%;
             max-width: 600px;
             margin-bottom: 15px;
             color: #e0d5c1;
+            font-size: 18px;
         }
         .lang-selector {
             padding: 8px 16px;
@@ -239,23 +241,24 @@
 
     <!-- Выбор языка -->
     <div class="toolbar">
-        <span>🇹🇿 Изучаю:</span>
-<select id="lang-select" class="lang-selector">
-    <option value="sw" selected>🇹🇿 Суахили (Swahili)</option>
-    <option value="en">🇬🇧 Английский (English)</option>
-    <option value="fr">🇫🇷 Французский (French)</option>
-    <option value="de">🇩🇪 Немецкий (German)</option>
-    <option value="es">🇪🇸 Испанский (Spanish)</option>
-    <option value="it">🇮🇹 Итальянский (Italian)</option>
-    <option value="pt">🇵🇹 Португальский (Portuguese)</option>
-    <option value="nl">🇳🇱 Голландский (Dutch)</option>
-    <option value="ar">🇸🇦 Арабский (Arabic)</option>
-    <option value="zh-CN">🇨🇳 Китайский (Chinese)</option>
-    <option value="ja">🇯🇵 Японский (Japanese)</option>
-    <option value="ko">🇰🇷 Корейский (Korean)</option>
-    <option value="hi">🇮🇳 Хинди (Hindi)</option>
-    <option value="tr">🇹🇷 Турецкий (Turkish)</option>
-</select>
+        <span id="lang-flag">🇹🇿</span>
+        <span>Изучаю:</span>
+        <select id="lang-select" class="lang-selector">
+            <option value="sw" selected>🇹🇿 Суахили (Swahili)</option>
+            <option value="en">🇬🇧 Английский (English)</option>
+            <option value="fr">🇫🇷 Французский (French)</option>
+            <option value="de">🇩🇪 Немецкий (German)</option>
+            <option value="es">🇪🇸 Испанский (Spanish)</option>
+            <option value="it">🇮🇹 Итальянский (Italian)</option>
+            <option value="pt">🇵🇹 Португальский (Portuguese)</option>
+            <option value="nl">🇳🇱 Голландский (Dutch)</option>
+            <option value="ar">🇸🇦 Арабский (Arabic)</option>
+            <option value="zh-CN">🇨🇳 Китайский (Chinese)</option>
+            <option value="ja">🇯🇵 Японский (Japanese)</option>
+            <option value="ko">🇰🇷 Корейский (Korean)</option>
+            <option value="hi">🇮🇳 Хинди (Hindi)</option>
+            <option value="tr">🇹🇷 Турецкий (Turkish)</option>
+        </select>
     </div>
 
     <!-- Вкладки -->
@@ -285,7 +288,7 @@
     </div>
     <input type="file" id="import-file-input" accept=".json">
 
-    <div class="footer">🧠 Активный recall · 🔍 Живой поиск · 📖 Разбор фраз</div>
+    <div class="footer">🧠 Активный recall · 🔍 Живой поиск · 🎤 Запись себя</div>
 
     <!-- Модальное окно для X-Ray -->
     <div class="modal" id="xray-modal">
@@ -298,57 +301,76 @@
 
     <script>
         // ================== ГЛОБАЛЬНЫЕ НАСТРОЙКИ ==================
-        const STORAGE_WORDS = 'lingvo_words_v1';
-        const STORAGE_PHRASES = 'lingvo_phrases_v1';
         let currentLang = 'sw';
-
-        // Текущее состояние
         let currentTab = 'words';
-        let words = loadFromStorage(STORAGE_WORDS, []);
-        let phrases = loadFromStorage(STORAGE_PHRASES, []);
-    // ================== АУДИО РЕКОРДЕР ==================
-    let mediaRecorder;
-    let audioChunks = [];
-    let currentRecBtn = null;
+        let words = [];
+        let phrases = [];
 
-    async function startRecording(word) {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
-            audioChunks = [];
-            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
-            mediaRecorder.onstop = () => {
-                const blob = new Blob(audioChunks, { type: 'audio/mp3' });
-                new Audio(URL.createObjectURL(blob)).play();
-                stream.getTracks().forEach(t => t.stop());
-                if (currentRecBtn) {
-                    currentRecBtn.textContent = '🎤';
-                    currentRecBtn.style.background = '#8b4513'; // возвращаем коричневый
-                    currentRecBtn = null;
-                }
-            };
-            mediaRecorder.start();
-            setTimeout(() => { if (mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 3000);
-        } catch (err) {
-            alert('❌ Нет доступа к микрофону. Разрешите запись в браузере.');
-            if (currentRecBtn) {
-                currentRecBtn.textContent = '🎤';
-                currentRecBtn.style.background = '#8b4513';
-                currentRecBtn = null;
-            }
+        // Флаги для отображения
+        const flags = { sw: '🇹🇿', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', nl: '🇳🇱', ar: '🇸🇦', 'zh-CN': '🇨🇳', ja: '🇯🇵', ko: '🇰🇷', hi: '🇮🇳', tr: '🇹🇷' };
+        const langNames = { sw: 'суахили', en: 'английском', fr: 'французском', de: 'немецком', es: 'испанском', it: 'итальянском', pt: 'португальском', nl: 'голландском', ar: 'арабском', 'zh-CN': 'китайском', ja: 'японском', ko: 'корейском', hi: 'хинди', tr: 'турецком' };
+        const langNamesFull = { sw: 'суахили', en: 'английский', fr: 'французский', de: 'немецкий', es: 'испанский', it: 'итальянский', pt: 'португальский', nl: 'голландский', ar: 'арабский', 'zh-CN': 'китайский', ja: 'японский', ko: 'корейский', hi: 'хинди', tr: 'турецкий' };
+
+        // ================== ХРАНЕНИЕ (с учётом языка) ==================
+        function getStorageKey(base) {
+            return `lingvo_${currentLang}_${base}`;
         }
-    }
-        // ================== ХРАНЕНИЕ ==================
-        function loadFromStorage(key, defaultData) {
-            const stored = localStorage.getItem(key);
+
+        function loadWords() {
+            const stored = localStorage.getItem(getStorageKey('words'));
             if (stored) {
                 try { return JSON.parse(stored); } catch(e) {}
             }
-            return [...defaultData];
+            return [];
         }
 
-        function saveToStorage(key, data) {
-            localStorage.setItem(key, JSON.stringify(data));
+        function loadPhrases() {
+            const stored = localStorage.getItem(getStorageKey('phrases'));
+            if (stored) {
+                try { return JSON.parse(stored); } catch(e) {}
+            }
+            return [];
+        }
+
+        function saveWords() {
+            localStorage.setItem(getStorageKey('words'), JSON.stringify(words));
+        }
+
+        function savePhrases() {
+            localStorage.setItem(getStorageKey('phrases'), JSON.stringify(phrases));
+        }
+
+        // ================== АУДИО РЕКОРДЕР ==================
+        let mediaRecorder;
+        let audioChunks = [];
+        let currentRecBtn = null;
+
+        async function startRecording(word) {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+                mediaRecorder.onstop = () => {
+                    const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    new Audio(URL.createObjectURL(blob)).play();
+                    stream.getTracks().forEach(t => t.stop());
+                    if (currentRecBtn) {
+                        currentRecBtn.textContent = '🎤';
+                        currentRecBtn.style.background = '#8b4513';
+                        currentRecBtn = null;
+                    }
+                };
+                mediaRecorder.start();
+                setTimeout(() => { if (mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 3000);
+            } catch (err) {
+                alert('❌ Нет доступа к микрофону. Разрешите запись в браузере.');
+                if (currentRecBtn) {
+                    currentRecBtn.textContent = '🎤';
+                    currentRecBtn.style.background = '#8b4513';
+                    currentRecBtn = null;
+                }
+            }
         }
 
         // ================== ИНТЕРФЕЙС ==================
@@ -357,15 +379,24 @@
         const newItemInput = document.getElementById('new-item-input');
         const addItemBtn = document.getElementById('add-item-btn');
         const langSelect = document.getElementById('lang-select');
+        const langFlag = document.getElementById('lang-flag');
         const modal = document.getElementById('xray-modal');
         const xrayText = document.getElementById('xray-text');
 
         // Переключение языка
+        function switchLanguage(lang) {
+            currentLang = lang;
+            langFlag.textContent = flags[lang] || '🌐';
+            newItemInput.placeholder = `Введи слово или фразу на ${langNames[lang] || 'языке'}...`;
+            
+            // Загружаем данные для нового языка
+            words = loadWords();
+            phrases = loadPhrases();
+            renderCards();
+        }
+
         langSelect.addEventListener('change', (e) => {
-            currentLang = e.target.value;
-            // Меняем плейсхолдер для наглядности
-            const langNames = { sw: 'суахили', fr: 'французском', de: 'немецком', es: 'испанском' };
-            newItemInput.placeholder = `Введи слово или фразу на ${langNames[currentLang]}...`;
+            switchLanguage(e.target.value);
         });
 
         // Вкладки
@@ -378,7 +409,6 @@
             });
         });
 
-        // Рендер карточек с учётом поиска
         // Рендер карточек с учётом поиска
         function renderCards() {
             const searchTerm = searchInput.value.trim().toLowerCase();
@@ -411,7 +441,7 @@
                 const controls = document.createElement('div');
                 controls.className = 'controls';
 
-                // 1️⃣ Кнопка ОЗВУЧКИ (TTS)
+                // 1️⃣ Озвучка
                 const playBtn = document.createElement('button');
                 playBtn.textContent = '🔊';
                 playBtn.onclick = (e) => {
@@ -422,21 +452,21 @@
                     speechSynthesis.speak(utterance);
                 };
 
-                // 2️⃣ Кнопка X-RAY (Мозг)
+                // 2️⃣ X-Ray
                 const tipBtn = document.createElement('button');
                 tipBtn.textContent = '🧠';
                 tipBtn.style.background = '#4a6b45';
                 tipBtn.onclick = (e) => {
                     e.stopPropagation();
                     if (currentTab === 'phrases') {
-                        xrayText.innerText = `📐 Дословный разбор фразы:\n\n"${item.sw}"\n\n(Детальный разбор конструкций появится в следующем обновлении. А пока смотрите в учебник!)`;
+                        xrayText.innerText = `📐 Дословный разбор фразы:\n\n"${item.sw}"\n\n(Детальный разбор появится позже)`;
                     } else {
                         xrayText.innerText = `📖 Слово: "${item.sw}"\n\nПеревод: ${item.ru}\n\nГрамматическая справка будет здесь.`;
                     }
                     modal.style.display = 'flex';
                 };
 
-                // 3️⃣ Кнопка ЗАПИСИ СЕБЯ (RECORDER)
+                // 3️⃣ Запись себя
                 const recBtn = document.createElement('button');
                 recBtn.textContent = '🎤';
                 recBtn.style.background = '#8b4513';
@@ -449,7 +479,6 @@
                     startRecording(item.sw);
                 };
 
-                // Добавляем все кнопки в панель управления
                 controls.appendChild(playBtn);
                 controls.appendChild(tipBtn);
                 controls.appendChild(recBtn);
@@ -457,7 +486,6 @@
                 card.appendChild(textDiv);
                 card.appendChild(controls);
 
-                // Логика переворота карточки (активный recall)
                 card.onclick = () => {
                     flipped = !flipped;
                     textDiv.textContent = flipped ? item.ru : item.sw;
@@ -467,18 +495,14 @@
             });
         }
 
-        // Закрытие модального окна
-        document.getElementById('close-modal').addEventListener('click', () => {
-            modal.style.display = 'none';
-        });
-        window.addEventListener('click', (e) => {
-            if (e.target === modal) modal.style.display = 'none';
-        });
+        // Закрытие модалки
+        document.getElementById('close-modal').addEventListener('click', () => modal.style.display = 'none');
+        window.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
 
-        // Поиск (живой фильтр)
+        // Поиск
         searchInput.addEventListener('input', renderCards);
 
-        // ================== ДОБАВЛЕНИЕ (Автоопределение Слово/Фраза) ==================
+        // ================== ДОБАВЛЕНИЕ (автоопределение) ==================
         async function addNewItem() {
             const ruText = newItemInput.value.trim();
             if (!ruText) return;
@@ -495,16 +519,15 @@
                 if (swText) {
                     const newItem = { sw: swText, ru: ruText };
                     
-                    // АВТООПРЕДЕЛЕНИЕ: если есть пробел -> фраза, иначе -> слово
                     if (ruText.includes(' ')) {
                         phrases.push(newItem);
-                        saveToStorage(STORAGE_PHRASES, phrases);
+                        savePhrases();
                         if (currentTab !== 'phrases') {
                             document.querySelector('[data-tab="phrases"]').click();
                         }
                     } else {
                         words.push(newItem);
-                        saveToStorage(STORAGE_WORDS, words);
+                        saveWords();
                         if (currentTab !== 'words') {
                             document.querySelector('[data-tab="words"]').click();
                         }
@@ -524,17 +547,15 @@
         }
 
         addItemBtn.addEventListener('click', addNewItem);
-        newItemInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') addNewItem();
-        });
+        newItemInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addNewItem(); });
 
         // ================== ЭКСПОРТ / ИМПОРТ ==================
         document.getElementById('export-btn').addEventListener('click', () => {
-            const data = { words, phrases };
+            const data = { lang: currentLang, words, phrases };
             const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
             const a = document.createElement('a');
             a.href = URL.createObjectURL(blob);
-            a.download = `lingvo_backup_${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `lingvo_${currentLang}_${new Date().toISOString().slice(0,10)}.json`;
             a.click();
         });
 
@@ -549,13 +570,22 @@
             reader.onload = (ev) => {
                 try {
                     const imported = JSON.parse(ev.target.result);
+                    
+                    if (imported.lang && imported.lang !== currentLang) {
+                        const fileNameLang = langNamesFull[imported.lang] || imported.lang;
+                        const currentLangName = langNamesFull[currentLang] || currentLang;
+                        if (!confirm(`⚠️ Файл для языка "${fileNameLang}", а выбран "${currentLangName}". Импортировать всё равно?`)) {
+                            return;
+                        }
+                    }
+                    
                     if (imported.words) {
                         words = imported.words;
-                        saveToStorage(STORAGE_WORDS, words);
+                        saveWords();
                     }
                     if (imported.phrases) {
                         phrases = imported.phrases;
-                        saveToStorage(STORAGE_PHRASES, phrases);
+                        savePhrases();
                     }
                     renderCards();
                     alert('✅ Импорт завершён!');
@@ -567,8 +597,8 @@
             reader.readAsText(file);
         });
 
-        // Старт
-        renderCards();
+        // ================== СТАРТ ==================
+        switchLanguage('sw');
     </script>
 </body>
 </html>
