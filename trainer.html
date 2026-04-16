@@ -240,12 +240,22 @@
     <!-- Выбор языка -->
     <div class="toolbar">
         <span>🇹🇿 Изучаю:</span>
-        <select id="lang-select" class="lang-selector">
-            <option value="sw" selected>Суахили (Swahili)</option>
-            <option value="fr">Французский (French)</option>
-            <option value="de">Немецкий (German)</option>
-            <option value="es">Испанский (Spanish)</option>
-        </select>
+<select id="lang-select" class="lang-selector">
+    <option value="sw" selected>🇹🇿 Суахили (Swahili)</option>
+    <option value="en">🇬🇧 Английский (English)</option>
+    <option value="fr">🇫🇷 Французский (French)</option>
+    <option value="de">🇩🇪 Немецкий (German)</option>
+    <option value="es">🇪🇸 Испанский (Spanish)</option>
+    <option value="it">🇮🇹 Итальянский (Italian)</option>
+    <option value="pt">🇵🇹 Португальский (Portuguese)</option>
+    <option value="nl">🇳🇱 Голландский (Dutch)</option>
+    <option value="ar">🇸🇦 Арабский (Arabic)</option>
+    <option value="zh-CN">🇨🇳 Китайский (Chinese)</option>
+    <option value="ja">🇯🇵 Японский (Japanese)</option>
+    <option value="ko">🇰🇷 Корейский (Korean)</option>
+    <option value="hi">🇮🇳 Хинди (Hindi)</option>
+    <option value="tr">🇹🇷 Турецкий (Turkish)</option>
+</select>
     </div>
 
     <!-- Вкладки -->
@@ -296,7 +306,38 @@
         let currentTab = 'words';
         let words = loadFromStorage(STORAGE_WORDS, []);
         let phrases = loadFromStorage(STORAGE_PHRASES, []);
+    // ================== АУДИО РЕКОРДЕР ==================
+    let mediaRecorder;
+    let audioChunks = [];
+    let currentRecBtn = null;
 
+    async function startRecording(word) {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+            mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+            mediaRecorder.onstop = () => {
+                const blob = new Blob(audioChunks, { type: 'audio/mp3' });
+                new Audio(URL.createObjectURL(blob)).play();
+                stream.getTracks().forEach(t => t.stop());
+                if (currentRecBtn) {
+                    currentRecBtn.textContent = '🎤';
+                    currentRecBtn.style.background = '#8b4513'; // возвращаем коричневый
+                    currentRecBtn = null;
+                }
+            };
+            mediaRecorder.start();
+            setTimeout(() => { if (mediaRecorder?.state === 'recording') mediaRecorder.stop(); }, 3000);
+        } catch (err) {
+            alert('❌ Нет доступа к микрофону. Разрешите запись в браузере.');
+            if (currentRecBtn) {
+                currentRecBtn.textContent = '🎤';
+                currentRecBtn.style.background = '#8b4513';
+                currentRecBtn = null;
+            }
+        }
+    }
         // ================== ХРАНЕНИЕ ==================
         function loadFromStorage(key, defaultData) {
             const stored = localStorage.getItem(key);
@@ -379,7 +420,20 @@
                     utterance.rate = 0.9;
                     speechSynthesis.speak(utterance);
                 };
-
+const recBtn = document.createElement('button');
+recBtn.textContent = '🎤';
+recBtn.style.background = '#8b4513'; // Коричневый оттенок для разнообразия
+recBtn.onclick = (e) => {
+    e.stopPropagation();
+    if (currentRecBtn) return;
+    currentRecBtn = recBtn;
+    recBtn.textContent = '🔴';
+    recBtn.style.background = '#8b0000';
+    startRecording(item.sw);
+};
+controls.appendChild(playBtn);
+controls.appendChild(tipBtn);
+controls.appendChild(recBtn);
                 // 🧠 X-Ray разбор
                 const tipBtn = document.createElement('button');
                 tipBtn.textContent = '🧠';
