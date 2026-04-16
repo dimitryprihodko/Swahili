@@ -446,10 +446,16 @@
         const langNames = { sw: 'суахили', en: 'английском', fr: 'французском', de: 'немецком', es: 'испанском', it: 'итальянском', pt: 'португальском', nl: 'голландском' };
         const langNamesFull = { sw: 'суахили', en: 'английский', fr: 'французский', de: 'немецкий', es: 'испанский', it: 'итальянский', pt: 'португальский', nl: 'голландский' };
 
-        const placeholders = {
-            ru: { sw: 'Введи слово или фразу на суахили...', en: 'Введи слово или фразу на английском...' },
-            en: { sw: 'Enter a word or phrase in Swahili...', en: 'Enter a word or phrase in English...' }
-        };
+       const placeholders = {
+    ru: 'Введи слово или фразу на русском...',
+    en: 'Enter a word or phrase in English...',
+    fr: 'Entrez un mot ou une phrase en français...',
+    de: 'Gib ein Wort oder einen Satz auf Deutsch ein...',
+    es: 'Introduce una palabra o frase en español...',
+    it: 'Inserisci una parola o una frase in italiano...',
+    pt: 'Digite uma palavra ou frase em português...',
+    nl: 'Voer een woord of zin in het Nederlands in...'
+};
 
         // ================== ХРАНЕНИЕ ==================
         function getStorageKey(base) {
@@ -632,11 +638,10 @@
             updatePlaceholder();
         });
 
-        function updatePlaceholder() {
-            const langName = langNames[currentLang] || currentLang;
-            const placeholdersMap = placeholders[uiLang] || placeholders.ru;
-            newItemInput.placeholder = placeholdersMap[currentLang] || `Введи слово или фразу на ${langName}...`;
-        }
+function updatePlaceholder() {
+    // Берем строку для выбранного РОДНОГО языка (или русский по умолчанию)
+    newItemInput.placeholder = placeholders[uiLang] || placeholders.ru;
+}
 
         function switchLanguage(lang) {
             currentLang = lang;
