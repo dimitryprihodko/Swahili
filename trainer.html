@@ -464,9 +464,11 @@
         }
 
         function showXRay(phraseText) {
+            // Для суахили используем умный разборщик
             if (currentLang === 'sw') {
                 const breakdown = smartBreakdownSwahili(phraseText);
                 let html = `<p><strong>${flags[currentLang]} ${phraseText}</strong></p>`;
+                
                 if (breakdown.parts.length > 0) {
                     html += `<table><tr><th>Часть</th><th>Значение</th><th>В словаре?</th></tr>`;
                     breakdown.parts.forEach(part => {
@@ -474,16 +476,46 @@
                         html += `<tr><td class="${known ? 'known-word' : ''}">${part.text}</td><td>${part.meaning}</td><td>${known ? '✅' : `<button class="add-to-dict" data-part="${part.text}" data-meaning="${part.meaning}">➕</button>`}</td></tr>`;
                     });
                     html += `</table><p><strong>📐 Дословно:</strong> ${breakdown.literal}</p>`;
-                } else { html += `<p>🔬 Не удалось разобрать автоматически.</p>`; }
+                } else {
+                    html += `<p>🔬 Не удалось разобрать автоматически.</p>`;
+                }
+                
+                // Кнопка "Спросить Дипсика" — копирует фразу и открывает чат
                 html += `<button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>`;
                 xrayText.innerHTML = html;
-                document.getElementById('ask-deepseek-btn').addEventListener('click', () => { navigator.clipboard?.writeText(phraseText); window.open('https://chat.deepseek.com/', '_blank'); });
+                
+                document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
+                    navigator.clipboard?.writeText(phraseText).then(() => {
+                        alert('✅ Фраза скопирована! Вставьте её в чат с Дипсиком.');
+                    }).catch(() => {
+                        alert('⚠️ Не удалось скопировать. Скопируйте вручную: ' + phraseText);
+                    });
+                    window.open('https://chat.deepseek.com/', '_blank');
+                });
             } else {
                 const flag = flags[currentLang] || '🌐';
-                xrayText.innerHTML = `<p><strong>${flag} ${phraseText}</strong></p><p>Автоматический разбор для этого языка пока недоступен.</p><button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>`;
-                document.getElementById('ask-deepseek-btn').addEventListener('click', () => { navigator.clipboard?.writeText(phraseText); window.open('https://chat.deepseek.com/', '_blank'); });
+                xrayText.innerHTML = `
+                    <p><strong>${flag} ${phraseText}</strong></p>
+                    <p>Автоматический разбор для этого языка пока недоступен.</p>
+                    <button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>
+                `;
+                document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
+                    navigator.clipboard?.writeText(phraseText).then(() => {
+                        alert('✅ Фраза скопирована! Вставьте её в чат с Дипсиком.');
+                    }).catch(() => {
+                        alert('⚠️ Не удалось скопировать. Скопируйте вручную: ' + phraseText);
+                    });
+                    window.open('https://chat.deepseek.com/', '_blank');
+                });
             }
-            xrayText.querySelectorAll('.add-to-dict').forEach(btn => btn.addEventListener('click', async (e) => { await addPartToDictionary({ text: btn.dataset.part, meaning: btn.dataset.meaning }); showXRay(phraseText); }));
+            
+            xrayText.querySelectorAll('.add-to-dict').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    await addPartToDictionary({ text: btn.dataset.part, meaning: btn.dataset.meaning });
+                    showXRay(phraseText);
+                });
+            });
+            
             modal.style.display = 'flex';
         }
 
