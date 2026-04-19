@@ -429,9 +429,9 @@
             }
         }
 
-        function showXRay(phraseText) {
+         function showXRay(phraseText) {
             const question = encodeURIComponent(`Разбери фразу на ${langNamesFull[currentLang] || currentLang}: "${phraseText}". Дай таблицу с частями, значением и дословный перевод.`);
-            const chatUrl = `https://chat.openai.com/?q=${question}`; // Или ваш URL
+            const chatUrl = `https://chat.deepseek.com/?q=${question}`;
             
             const flag = flags[currentLang] || '🌐';
             
@@ -441,10 +441,13 @@
                 <button id="copy-and-chat" style="background: #d4af37; color: #1e3b1a; padding: 12px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer;">🤖 Спросить Дипсика</button>
             `;
             
-            document.getElementById('copy-and-chat').addEventListener('click', () => {
-                navigator.clipboard?.writeText(phraseText);
-                window.open('https://chat.openai.com/', '_blank');
-            });
+            const copyBtn = document.getElementById('copy-and-chat');
+            if (copyBtn) {
+                copyBtn.addEventListener('click', () => {
+                    navigator.clipboard?.writeText(phraseText);
+                    window.open(chatUrl, '_blank');
+                });
+            }
             
             modal.style.display = 'flex';
         }
