@@ -430,20 +430,22 @@
         }
 
         function showXRay(phraseText) {
-            const b = PHRASE_BREAKDOWN[phraseText];
-            let html = `<p><strong>🇹🇿 ${phraseText}</strong></p>`;
-            if(b) {
-                html += `<table><tr><th>Часть</th><th>Значение</th><th>В словаре?</th></tr>`;
-                b.parts.forEach(p => {
-                    const known = isWordKnown(p.text);
-                    html += `<tr><td class="${known ? 'known-word' : ''}">${p.text}</td><td>${p.meaning}</td><td>${known ? '✅' : `<button class="add-to-dict" data-part="${p.text}" data-meaning="${p.meaning}">➕</button>`}</td></tr>`;
-                });
-                html += `</table><p><strong>📐 Дословно:</strong> ${b.literal}</p>`;
-            } else { html += `<p>🔬 Разбор не добавлен.</p>`; }
-            xrayText.innerHTML = html;
-            xrayText.querySelectorAll('.add-to-dict').forEach(btn => btn.addEventListener('click', async (e) => {
-                await addPartToDictionary({ text: btn.dataset.part, meaning: btn.dataset.meaning }); showXRay(phraseText);
-            }));
+            const question = encodeURIComponent(`Разбери фразу на ${langNamesFull[currentLang] || currentLang}: "${phraseText}". Дай таблицу с частями, значением и дословный перевод.`);
+            const chatUrl = `https://chat.openai.com/?q=${question}`; // Или ваш URL
+            
+            const flag = flags[currentLang] || '🌐';
+            
+            xrayText.innerHTML = `
+                <p><strong>${flag} ${phraseText}</strong></p>
+                <p>Нажмите кнопку, чтобы скопировать фразу и открыть чат с Дипсиком для разбора.</p>
+                <button id="copy-and-chat" style="background: #d4af37; color: #1e3b1a; padding: 12px 20px; border: none; border-radius: 20px; font-weight: bold; cursor: pointer;">🤖 Спросить Дипсика</button>
+            `;
+            
+            document.getElementById('copy-and-chat').addEventListener('click', () => {
+                navigator.clipboard?.writeText(phraseText);
+                window.open('https://chat.openai.com/', '_blank');
+            });
+            
             modal.style.display = 'flex';
         }
 
