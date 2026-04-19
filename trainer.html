@@ -313,59 +313,31 @@
     <script>
         // ================== УМНЫЙ РАЗБОРЩИК СУАХИЛИ ==================
         const SUBJECT_PREFIXES = [
-            { prefix: 'ni', meaning: 'Я' },
-            { prefix: 'u', meaning: 'Ты' },
-            { prefix: 'a', meaning: 'Он/Она' },
-            { prefix: 'tu', meaning: 'Мы' },
-            { prefix: 'm', meaning: 'Вы' },
-            { prefix: 'wa', meaning: 'Они' }
+            { prefix: 'ni', meaning: 'Я' }, { prefix: 'u', meaning: 'Ты' }, { prefix: 'a', meaning: 'Он/Она' },
+            { prefix: 'tu', meaning: 'Мы' }, { prefix: 'm', meaning: 'Вы' }, { prefix: 'wa', meaning: 'Они' }
         ];
-        
         const TENSE_MARKERS = [
-            { marker: 'na', meaning: 'наст. время' },
-            { marker: 'li', meaning: 'прош. время' },
-            { marker: 'ta', meaning: 'буд. время' },
-            { marker: 'me', meaning: 'завершённое' }
+            { marker: 'na', meaning: 'наст. время' }, { marker: 'li', meaning: 'прош. время' },
+            { marker: 'ta', meaning: 'буд. время' }, { marker: 'me', meaning: 'завершённое' }
         ];
-        
         const OBJECT_INFIXES = [
-            { infix: 'ni', meaning: 'меня' },
-            { infix: 'ku', meaning: 'тебя' },
-            { infix: 'm', meaning: 'его/её' },
-            { infix: 'tu', meaning: 'нас' },
-            { infix: 'wa', meaning: 'вас/их' }
+            { infix: 'ni', meaning: 'меня' }, { infix: 'ku', meaning: 'тебя' }, { infix: 'm', meaning: 'его/её' },
+            { infix: 'tu', meaning: 'нас' }, { infix: 'wa', meaning: 'вас/их' }
         ];
-        
         const VERB_ROOTS = [
-            { root: 'penda', meaning: 'любить' },
-            { root: 'soma', meaning: 'учить(ся)/читать' },
-            { root: 'fanya', meaning: 'делать' },
-            { root: 'sema', meaning: 'говорить' },
-            { root: 'toka', meaning: 'происходить' },
-            { root: 'enda', meaning: 'идти' },
-            { root: 'la', meaning: 'есть (кушать)' },
-            { root: 'nywa', meaning: 'пить' },
-            { root: 'ona', meaning: 'видеть' },
-            { root: 'jua', meaning: 'знать' },
-            { root: 'ishi', meaning: 'жить' },
-            { root: 'kubali', meaning: 'соглашаться' },
-            { root: 'taka', meaning: 'хотеть' },
-            { root: 'weza', meaning: 'мочь' }
+            { root: 'penda', meaning: 'любить' }, { root: 'soma', meaning: 'учить(ся)/читать' },
+            { root: 'fanya', meaning: 'делать' }, { root: 'sema', meaning: 'говорить' },
+            { root: 'toka', meaning: 'происходить' }, { root: 'enda', meaning: 'идти' },
+            { root: 'la', meaning: 'есть (кушать)' }, { root: 'nywa', meaning: 'пить' },
+            { root: 'ona', meaning: 'видеть' }, { root: 'jua', meaning: 'знать' },
+            { root: 'ishi', meaning: 'жить' }, { root: 'kubali', meaning: 'соглашаться' },
+            { root: 'taka', meaning: 'хотеть' }, { root: 'weza', meaning: 'мочь' }
         ];
 
         function smartBreakdownSwahili(phrase) {
             const parts = [];
-            let remaining = phrase.toLowerCase();
-            
-            const knownPhrase = phrases.find(p => p.sw.toLowerCase() === remaining);
-            if (knownPhrase) {
-                parts.push({ text: phrase, meaning: knownPhrase.ru, type: 'phrase' });
-                return { parts, literal: phrase };
-            }
-            
-            const words = remaining.split(/\s+/);
+            const words = phrase.toLowerCase().split(/\s+/);
             let literalParts = [];
-            
             words.forEach(word => {
                 const knownWord = words.find(w => w.sw && w.sw.toLowerCase() === word);
                 if (knownWord) {
@@ -373,60 +345,43 @@
                     literalParts.push(word);
                     return;
                 }
-                
-                let w = word;
-                let wordParts = [];
-                let found = false;
-                
+                let w = word, wordParts = [], found = false;
                 for (let s of SUBJECT_PREFIXES) {
                     if (w.startsWith(s.prefix)) {
                         wordParts.push({ text: s.prefix + '-', meaning: s.meaning, type: 'prefix' });
-                        w = w.slice(s.prefix.length);
-                        found = true;
-                        break;
+                        w = w.slice(s.prefix.length); found = true; break;
                     }
                 }
-                
                 if (found) {
                     for (let t of TENSE_MARKERS) {
                         if (w.startsWith(t.marker)) {
                             wordParts.push({ text: '-' + t.marker + '-', meaning: t.meaning, type: 'infix' });
-                            w = w.slice(t.marker.length);
-                            break;
+                            w = w.slice(t.marker.length); break;
                         }
                     }
                 }
-                
                 for (let o of OBJECT_INFIXES) {
                     if (w.startsWith(o.infix)) {
                         wordParts.push({ text: '-' + o.infix + '-', meaning: o.meaning, type: 'object' });
-                        w = w.slice(o.infix.length);
-                        break;
+                        w = w.slice(o.infix.length); break;
                     }
                 }
-                
                 let rootFound = false;
                 for (let r of VERB_ROOTS) {
                     if (w === r.root || w.startsWith(r.root)) {
                         wordParts.push({ text: '-' + r.root, meaning: r.meaning, type: 'verb' });
-                        w = w.slice(r.root.length);
-                        rootFound = true;
-                        break;
+                        w = w.slice(r.root.length); rootFound = true; break;
                     }
                 }
-                
                 if (wordParts.length > 0) {
                     parts.push(...wordParts);
-                    let lit = wordParts.map(p => p.meaning).join('-');
-                    literalParts.push(`[${lit}]`);
+                    literalParts.push(`[${wordParts.map(p => p.meaning).join('-')}]`);
                 } else {
                     parts.push({ text: word, meaning: '?', type: 'unknown' });
                     literalParts.push(word);
                 }
             });
-            
-            const literal = literalParts.join(' ');
-            return { parts, literal };
+            return { parts, literal: literalParts.join(' ') };
         }
 
         // ================== ГЛОБАЛЬНЫЕ НАСТРОЙКИ ==================
@@ -434,27 +389,14 @@
         const flags = { sw: '🇹🇿', en: '🇬🇧', fr: '🇫🇷', de: '🇩🇪', es: '🇪🇸', it: '🇮🇹', pt: '🇵🇹', nl: '🇳🇱' };
         const langNamesFull = { sw: 'суахили', en: 'английский', fr: 'французский', de: 'немецкий', es: 'испанский' };
         const placeholders = {
-            ru: 'Введи слово или фразу на русском...',
-            en: 'Enter a word or phrase in English...',
-            fr: 'Entrez un mot ou une phrase en français...',
-            de: 'Gib ein Wort oder einen Satz auf Deutsch ein...',
+            ru: 'Введи слово или фразу на русском...', en: 'Enter a word or phrase in English...',
+            fr: 'Entrez un mot ou une phrase en français...', de: 'Gib ein Wort oder einen Satz auf Deutsch ein...',
             es: 'Introduce una palabra o frase en español...'
         };
 
-        // ================== ХРАНЕНИЕ ==================
-        function getStorageKey(base) {
-            return `lingvo_${currentLang}_from_${uiLang}_${base}`;
-        }
-        function loadWords() {
-            const stored = localStorage.getItem(getStorageKey('words'));
-            if (stored) { try { return JSON.parse(stored); } catch(e) {} }
-            return [];
-        }
-        function loadPhrases() {
-            const stored = localStorage.getItem(getStorageKey('phrases'));
-            if (stored) { try { return JSON.parse(stored); } catch(e) {} }
-            return [];
-        }
+        function getStorageKey(base) { return `lingvo_${currentLang}_from_${uiLang}_${base}`; }
+        function loadWords() { const s = localStorage.getItem(getStorageKey('words')); if(s) try{ return JSON.parse(s); }catch(e){} return []; }
+        function loadPhrases() { const s = localStorage.getItem(getStorageKey('phrases')); if(s) try{ return JSON.parse(s); }catch(e){} return []; }
         function saveWords() { localStorage.setItem(getStorageKey('words'), JSON.stringify(words)); }
         function savePhrases() { localStorage.setItem(getStorageKey('phrases'), JSON.stringify(phrases)); }
 
@@ -495,11 +437,7 @@
             words = loadWords(); phrases = loadPhrases(); renderCards();
         }
         langSelect.addEventListener('change', e => switchLanguage(e.target.value));
-
-        uiLangSelect.addEventListener('change', e => {
-            uiLang = e.target.value; updatePlaceholder();
-            words = loadWords(); phrases = loadPhrases(); renderCards();
-        });
+        uiLangSelect.addEventListener('change', e => { uiLang = e.target.value; updatePlaceholder(); words = loadWords(); phrases = loadPhrases(); renderCards(); });
 
         document.querySelectorAll('.tab-btn').forEach(btn => btn.addEventListener('click', () => {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -513,7 +451,6 @@
         }
 
         function isWordKnown(sw) { return words.some(w => w.sw === sw); }
-        
         async function addPartToDictionary(part) {
             try {
                 const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${uiLang}&dt=t&q=${encodeURIComponent(part.text)}`);
@@ -530,7 +467,6 @@
             if (currentLang === 'sw') {
                 const breakdown = smartBreakdownSwahili(phraseText);
                 let html = `<p><strong>${flags[currentLang]} ${phraseText}</strong></p>`;
-                
                 if (breakdown.parts.length > 0) {
                     html += `<table><tr><th>Часть</th><th>Значение</th><th>В словаре?</th></tr>`;
                     breakdown.parts.forEach(part => {
@@ -538,37 +474,16 @@
                         html += `<tr><td class="${known ? 'known-word' : ''}">${part.text}</td><td>${part.meaning}</td><td>${known ? '✅' : `<button class="add-to-dict" data-part="${part.text}" data-meaning="${part.meaning}">➕</button>`}</td></tr>`;
                     });
                     html += `</table><p><strong>📐 Дословно:</strong> ${breakdown.literal}</p>`;
-                } else {
-                    html += `<p>🔬 Не удалось разобрать автоматически.</p>`;
-                }
-                
+                } else { html += `<p>🔬 Не удалось разобрать автоматически.</p>`; }
                 html += `<button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>`;
                 xrayText.innerHTML = html;
-                
-                document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
-                    navigator.clipboard?.writeText(phraseText);
-                    window.open('https://chat.deepseek.com/', '_blank');
-                });
+                document.getElementById('ask-deepseek-btn').addEventListener('click', () => { navigator.clipboard?.writeText(phraseText); window.open('https://chat.deepseek.com/', '_blank'); });
             } else {
                 const flag = flags[currentLang] || '🌐';
-                xrayText.innerHTML = `
-                    <p><strong>${flag} ${phraseText}</strong></p>
-                    <p>Автоматический разбор для этого языка пока недоступен.</p>
-                    <button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>
-                `;
-                document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
-                    navigator.clipboard?.writeText(phraseText);
-                    window.open('https://chat.deepseek.com/', '_blank');
-                });
+                xrayText.innerHTML = `<p><strong>${flag} ${phraseText}</strong></p><p>Автоматический разбор для этого языка пока недоступен.</p><button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>`;
+                document.getElementById('ask-deepseek-btn').addEventListener('click', () => { navigator.clipboard?.writeText(phraseText); window.open('https://chat.deepseek.com/', '_blank'); });
             }
-            
-            xrayText.querySelectorAll('.add-to-dict').forEach(btn => {
-                btn.addEventListener('click', async (e) => {
-                    await addPartToDictionary({ text: btn.dataset.part, meaning: btn.dataset.meaning });
-                    showXRay(phraseText);
-                });
-            });
-            
+            xrayText.querySelectorAll('.add-to-dict').forEach(btn => btn.addEventListener('click', async (e) => { await addPartToDictionary({ text: btn.dataset.part, meaning: btn.dataset.meaning }); showXRay(phraseText); }));
             modal.style.display = 'flex';
         }
 
@@ -607,8 +522,7 @@
             addItemBtn.disabled = true; addItemBtn.textContent = '⏳ Перевод...';
             try {
                 const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${uiLang}&tl=${currentLang}&dt=t&q=${encodeURIComponent(ru)}`;
-                const res = await fetch(url); const data = await res.json();
-                let sw = data[0][0][0];
+                const res = await fetch(url); const data = await res.json(); let sw = data[0][0][0];
                 const isPhrase = ru.includes(' ') ? (ru.split(/\s+/).length >= 3 || confirm(`"${ru}" → "${sw}"\n\nЭто ФРАЗА?`)) : false;
                 if(isPhrase) { phrases.push({ sw, ru }); savePhrases(); }
                 else { words.push({ sw, ru }); saveWords(); }
@@ -640,9 +554,8 @@
                     if(imp.lang !== currentLang || imp.uiLang !== uiLang) {
                         if(!confirm(`⚠️ Файл для пары "${imp.uiLang}→${imp.lang}". Сейчас выбрано "${uiLang}→${currentLang}". Импортировать?`)) return;
                     }
-                    if(imp.words) { words = imp.words; saveWords(); }
-                    if(imp.phrases) { phrases = imp.phrases; savePhrases(); }
-                    renderCards(); alert('✅ Импорт завершён!');
+                    words = imp.words || []; phrases = imp.phrases || [];
+                    saveWords(); savePhrases(); renderCards(); alert('✅ Импорт завершён!');
                 } catch(err) { alert('❌ Ошибка файла.'); }
                 e.target.value = '';
             };
@@ -650,14 +563,10 @@
         });
 
         // Тренировка
-        const challengePrompt = document.getElementById('challenge-prompt');
-        const challengeInput = document.getElementById('challenge-input');
-        const startBtn = document.getElementById('start-challenge-btn');
-        const playBtn = document.getElementById('play-challenge-btn');
-        const recBtn = document.getElementById('record-challenge-btn');
-        const checkBtn = document.getElementById('check-answer-btn');
-        const resultDiv = document.getElementById('challenge-result');
-        let currentItem = null;
+        const challengePrompt = document.getElementById('challenge-prompt'), challengeInput = document.getElementById('challenge-input');
+        const startBtn = document.getElementById('start-challenge-btn'), playBtn = document.getElementById('play-challenge-btn');
+        const recBtn = document.getElementById('record-challenge-btn'), checkBtn = document.getElementById('check-answer-btn');
+        const resultDiv = document.getElementById('challenge-result'); let currentItem = null;
 
         function pickRandom() {
             const items = currentTab === 'words' ? words : phrases;
@@ -666,10 +575,8 @@
             challengePrompt.textContent = `👉 ${currentItem.ru} 👈`;
             challengeInput.style.display = 'block'; challengeInput.value = '';
             playBtn.style.display = 'inline-block'; recBtn.style.display = 'inline-block';
-            checkBtn.style.display = 'inline-block'; startBtn.textContent = '🔄 Следующий';
-            resultDiv.textContent = '';
+            checkBtn.style.display = 'inline-block'; startBtn.textContent = '🔄 Следующий'; resultDiv.textContent = '';
         }
-
         function checkAnswer() {
             if(!currentItem) return;
             const userAnswer = challengeInput.value.trim();
@@ -677,7 +584,6 @@
             resultDiv.innerHTML = isCorrect ? `✅ Верно! ${currentItem.sw}` : `❌ Неверно. Правильно: ${currentItem.sw}`;
             if(isCorrect) { const u = new SpeechSynthesisUtterance(currentItem.sw); u.lang = currentLang; speechSynthesis.speak(u); }
         }
-
         startBtn.addEventListener('click', pickRandom);
         playBtn.addEventListener('click', () => { if(currentItem) { const u = new SpeechSynthesisUtterance(currentItem.sw); u.lang = currentLang; speechSynthesis.speak(u); } });
         recBtn.addEventListener('click', () => { if(currentItem) toggleRecording(recBtn, currentItem.sw); });
