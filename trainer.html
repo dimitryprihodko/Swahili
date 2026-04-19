@@ -464,7 +464,6 @@
         }
 
         function showXRay(phraseText) {
-            // Для суахили используем умный разборщик
             if (currentLang === 'sw') {
                 const breakdown = smartBreakdownSwahili(phraseText);
                 let html = `<p><strong>${flags[currentLang]} ${phraseText}</strong></p>`;
@@ -480,15 +479,15 @@
                     html += `<p>🔬 Не удалось разобрать автоматически.</p>`;
                 }
                 
-                // Кнопка "Спросить Дипсика" — копирует фразу и открывает чат
                 html += `<button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>`;
                 xrayText.innerHTML = html;
                 
                 document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
-                    navigator.clipboard?.writeText(phraseText).then(() => {
-                        alert('✅ Фраза скопирована! Вставьте её в чат с Дипсиком.');
+                    const prompt = `Разбери фразу на суахили "${phraseText}" как лингвист. Дай ТОЛЬКО таблицу с частями (префиксы, корни, суффиксы), их значениями и дословный перевод. Не нужно давать советы по путешествиям или общие рассуждения.`;
+                    navigator.clipboard?.writeText(prompt).then(() => {
+                        alert('✅ Запрос скопирован! Вставьте его в чат с Дипсиком.');
                     }).catch(() => {
-                        alert('⚠️ Не удалось скопировать. Скопируйте вручную: ' + phraseText);
+                        alert('⚠️ Не удалось скопировать. Скопируйте вручную: ' + prompt);
                     });
                     window.open('https://chat.deepseek.com/', '_blank');
                 });
@@ -500,10 +499,12 @@
                     <button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>
                 `;
                 document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
-                    navigator.clipboard?.writeText(phraseText).then(() => {
-                        alert('✅ Фраза скопирована! Вставьте её в чат с Дипсиком.');
+                    const langName = langNamesFull[currentLang] || currentLang;
+                    const prompt = `Разбери фразу на ${langName} "${phraseText}" как лингвист. Дай ТОЛЬКО таблицу с частями (префиксы, корни, суффиксы), их значениями и дословный перевод. Не нужно давать советы или общие рассуждения.`;
+                    navigator.clipboard?.writeText(prompt).then(() => {
+                        alert('✅ Запрос скопирован! Вставьте его в чат с Дипсиком.');
                     }).catch(() => {
-                        alert('⚠️ Не удалось скопировать. Скопируйте вручную: ' + phraseText);
+                        alert('⚠️ Не удалось скопировать. Скопируйте вручную: ' + prompt);
                     });
                     window.open('https://chat.deepseek.com/', '_blank');
                 });
