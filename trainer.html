@@ -357,32 +357,27 @@
             const parts = [];
             let remaining = phrase.toLowerCase();
             
-            // 1. Проверяем, есть ли в пользовательском словаре целая фраза
             const knownPhrase = phrases.find(p => p.sw.toLowerCase() === remaining);
             if (knownPhrase) {
                 parts.push({ text: phrase, meaning: knownPhrase.ru, type: 'phrase' });
                 return { parts, literal: phrase };
             }
             
-            // 2. Разбираем по словам (если есть пробелы)
             const words = remaining.split(/\s+/);
             let literalParts = [];
             
             words.forEach(word => {
-                // Проверяем, есть ли слово целиком в пользовательском словаре
-                const knownWord = words.find(w => w.sw.toLowerCase() === word);
+                const knownWord = words.find(w => w.sw && w.sw.toLowerCase() === word);
                 if (knownWord) {
                     parts.push({ text: word, meaning: knownWord.ru, type: 'word' });
                     literalParts.push(word);
                     return;
                 }
                 
-                // Пытаемся разобрать глагольную форму
                 let w = word;
                 let wordParts = [];
                 let found = false;
                 
-                // Ищем субъектный префикс
                 for (let s of SUBJECT_PREFIXES) {
                     if (w.startsWith(s.prefix)) {
                         wordParts.push({ text: s.prefix + '-', meaning: s.meaning, type: 'prefix' });
@@ -392,7 +387,6 @@
                     }
                 }
                 
-                // Ищем показатель времени
                 if (found) {
                     for (let t of TENSE_MARKERS) {
                         if (w.startsWith(t.marker)) {
@@ -403,7 +397,6 @@
                     }
                 }
                 
-                // Ищем объектный инфикс
                 for (let o of OBJECT_INFIXES) {
                     if (w.startsWith(o.infix)) {
                         wordParts.push({ text: '-' + o.infix + '-', meaning: o.meaning, type: 'object' });
@@ -412,7 +405,6 @@
                     }
                 }
                 
-                // Ищем корень
                 let rootFound = false;
                 for (let r of VERB_ROOTS) {
                     if (w === r.root || w.startsWith(r.root)) {
@@ -428,7 +420,6 @@
                     let lit = wordParts.map(p => p.meaning).join('-');
                     literalParts.push(`[${lit}]`);
                 } else {
-                    // Не смогли разобрать — добавляем как неизвестное слово
                     parts.push({ text: word, meaning: '?', type: 'unknown' });
                     literalParts.push(word);
                 }
@@ -471,7 +462,6 @@
             localStorage.setItem('lingvo_emergency_backup', JSON.stringify({ lang: currentLang, uiLang, words, phrases }));
         });
 
-        // Аудио рекордер
         let mediaRecorder, audioChunks = [], currentRecBtn = null, isRecording = false;
         async function toggleRecording(btn, word) {
             if(!isRecording) {
@@ -490,7 +480,6 @@
             } else { if(mediaRecorder?.state === 'recording') mediaRecorder.stop(); }
         }
 
-        // Интерфейс
         const app = document.getElementById('app'), searchInput = document.getElementById('search-input');
         const newItemInput = document.getElementById('new-item-input'), addItemBtn = document.getElementById('add-item-btn');
         const langSelect = document.getElementById('lang-select'), langFlag = document.getElementById('lang-flag');
@@ -538,7 +527,6 @@
         }
 
         function showXRay(phraseText) {
-            // Для суахили используем умный разборщик
             if (currentLang === 'sw') {
                 const breakdown = smartBreakdownSwahili(phraseText);
                 let html = `<p><strong>${flags[currentLang]} ${phraseText}</strong></p>`;
@@ -554,26 +542,26 @@
                     html += `<p>🔬 Не удалось разобрать автоматически.</p>`;
                 }
                 
-                // Добавляем кнопку "Спросить Дипсика" на случай, если разбор неполный
-                const question = encodeURIComponent(`Разбери фразу на суахили: "${phraseText}". Дай таблицу с частями, значением и дословный перевод.`);
-                const chatUrl = `https://chat.deepseek.com/?q=${question}`;
-                html += `<button class="ask-deepseek-btn" onclick="window.open('${chatUrl}', '_blank')">🤖 Спросить Дипсика (для уточнения)</button>`;
-                
+                html += `<button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>`;
                 xrayText.innerHTML = html;
-            } else {
-                // Для других языков — сразу предлагаем спросить Дипсика
-                const question = encodeURIComponent(`Разбери фразу на ${langNamesFull[currentLang] || currentLang}: "${phraseText}". Дай таблицу с частями, значением и дословный перевод.`);
-                const chatUrl = `https://chat.deepseek.com/?q=${question}`;
-                const flag = flags[currentLang] || '🌐';
                 
+                document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
+                    navigator.clipboard?.writeText(phraseText);
+                    window.open('https://chat.deepseek.com/', '_blank');
+                });
+            } else {
+                const flag = flags[currentLang] || '🌐';
                 xrayText.innerHTML = `
                     <p><strong>${flag} ${phraseText}</strong></p>
                     <p>Автоматический разбор для этого языка пока недоступен.</p>
-                    <button class="ask-deepseek-btn" onclick="window.open('${chatUrl}', '_blank')">🤖 Спросить Дипсика</button>
+                    <button class="ask-deepseek-btn" id="ask-deepseek-btn">🤖 Спросить Дипсика</button>
                 `;
+                document.getElementById('ask-deepseek-btn').addEventListener('click', () => {
+                    navigator.clipboard?.writeText(phraseText);
+                    window.open('https://chat.deepseek.com/', '_blank');
+                });
             }
             
-            // Вешаем обработчики на кнопки ➕
             xrayText.querySelectorAll('.add-to-dict').forEach(btn => {
                 btn.addEventListener('click', async (e) => {
                     await addPartToDictionary({ text: btn.dataset.part, meaning: btn.dataset.meaning });
@@ -614,7 +602,6 @@
         window.addEventListener('click', e => { if(e.target === modal) modal.style.display = 'none'; });
         searchInput.addEventListener('input', renderCards);
 
-        // Добавление
         async function addNewItem() {
             const ru = newItemInput.value.trim(); if(!ru) return;
             addItemBtn.disabled = true; addItemBtn.textContent = '⏳ Перевод...';
@@ -631,4 +618,77 @@
             } catch(e) { alert('❌ Ошибка сети.'); }
             finally { addItemBtn.disabled = false; addItemBtn.textContent = '➕ Добавить'; }
         }
-        addItemBtn.addEventListener('click',
+        addItemBtn.addEventListener('click', addNewItem);
+        newItemInput.addEventListener('keypress', e => { if(e.key === 'Enter') addNewItem(); });
+
+        document.getElementById('export-btn').addEventListener('click', async () => {
+            const data = { lang: currentLang, uiLang, words, phrases };
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            const name = `lingvo_${currentLang}_from_${uiLang}_${new Date().toISOString().slice(0,10)}.json`;
+            if(navigator.share && navigator.canShare) {
+                const file = new File([blob], name, { type: 'application/json' });
+                if(navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file] }); return; } catch(e) {} }
+            }
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; a.click();
+        });
+        document.getElementById('import-btn').addEventListener('click', () => document.getElementById('import-file-input').click());
+        document.getElementById('import-file-input').addEventListener('change', e => {
+            const f = e.target.files[0]; if(!f) return; const r = new FileReader();
+            r.onload = ev => {
+                try {
+                    const imp = JSON.parse(ev.target.result);
+                    if(imp.lang !== currentLang || imp.uiLang !== uiLang) {
+                        if(!confirm(`⚠️ Файл для пары "${imp.uiLang}→${imp.lang}". Сейчас выбрано "${uiLang}→${currentLang}". Импортировать?`)) return;
+                    }
+                    if(imp.words) { words = imp.words; saveWords(); }
+                    if(imp.phrases) { phrases = imp.phrases; savePhrases(); }
+                    renderCards(); alert('✅ Импорт завершён!');
+                } catch(err) { alert('❌ Ошибка файла.'); }
+                e.target.value = '';
+            };
+            r.readAsText(f);
+        });
+
+        // Тренировка
+        const challengePrompt = document.getElementById('challenge-prompt');
+        const challengeInput = document.getElementById('challenge-input');
+        const startBtn = document.getElementById('start-challenge-btn');
+        const playBtn = document.getElementById('play-challenge-btn');
+        const recBtn = document.getElementById('record-challenge-btn');
+        const checkBtn = document.getElementById('check-answer-btn');
+        const resultDiv = document.getElementById('challenge-result');
+        let currentItem = null;
+
+        function pickRandom() {
+            const items = currentTab === 'words' ? words : phrases;
+            if(!items.length) { challengePrompt.textContent = '✨ Добавьте элементы'; return; }
+            currentItem = items[Math.floor(Math.random() * items.length)];
+            challengePrompt.textContent = `👉 ${currentItem.ru} 👈`;
+            challengeInput.style.display = 'block'; challengeInput.value = '';
+            playBtn.style.display = 'inline-block'; recBtn.style.display = 'inline-block';
+            checkBtn.style.display = 'inline-block'; startBtn.textContent = '🔄 Следующий';
+            resultDiv.textContent = '';
+        }
+
+        function checkAnswer() {
+            if(!currentItem) return;
+            const userAnswer = challengeInput.value.trim();
+            const isCorrect = userAnswer.toLowerCase() === currentItem.sw.toLowerCase();
+            resultDiv.innerHTML = isCorrect ? `✅ Верно! ${currentItem.sw}` : `❌ Неверно. Правильно: ${currentItem.sw}`;
+            if(isCorrect) { const u = new SpeechSynthesisUtterance(currentItem.sw); u.lang = currentLang; speechSynthesis.speak(u); }
+        }
+
+        startBtn.addEventListener('click', pickRandom);
+        playBtn.addEventListener('click', () => { if(currentItem) { const u = new SpeechSynthesisUtterance(currentItem.sw); u.lang = currentLang; speechSynthesis.speak(u); } });
+        recBtn.addEventListener('click', () => { if(currentItem) toggleRecording(recBtn, currentItem.sw); });
+        checkBtn.addEventListener('click', checkAnswer);
+        challengeInput.addEventListener('keypress', e => { if(e.key === 'Enter') checkAnswer(); });
+
+        const origRender = renderCards;
+        renderCards = function() { origRender(); currentItem = null; challengePrompt.textContent = 'Нажми «Случайный элемент»'; challengeInput.style.display = 'none'; playBtn.style.display = 'none'; recBtn.style.display = 'none'; checkBtn.style.display = 'none'; startBtn.textContent = '🎲 Случайный'; resultDiv.textContent = ''; };
+
+        switchLanguage('sw');
+        updatePlaceholder();
+    </script>
+</body>
+</html>
